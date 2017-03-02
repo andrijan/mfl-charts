@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>Dashboard</h1>
+
+<section class="row text-center placeholders">
+  {% for title, franchise in franchises %}
+  <div class="col-8 col-sm-4 placeholder">
+    <canvas data-title="{{ title }}" data-distribution="{{ franchise }}" class="{{ graph_class }}" width="400" height="400"></canvas>
+  </div>
+  {% endfor %}
+</section>
+{% endblock main %}
