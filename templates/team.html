@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>{{ title }}</h1>
+
+<div class="row">
+  {% for player in players %}
+  <div class="col">
+    <div class="card" style="width: 350px; height: 450px;">
+      <h3 class="card-header text-center">{{ player.name }}</h3>
+      {% if player.espn_id %}
+      <img class="card-img-top" src="http://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{{ player.espn_id }}.png&w=350&h=254" />
+      {% else %}
+      <img class="card-img-top" src="http://static.nfl.com/static/content/public/static/img/fantasy/transparent/200x200/MCR391962.png" />
+      {% endif %}
+      <div class="card-block">
+	<p class="card-text">
+	<strong>Team</strong>: {{ player.team }}<br />
+	<strong>Position</strong>: {{ player.position }}<br />
+	<strong>Age</strong>: {{ player.age }}<br />
+	<strong>Avg points</strong>: {{ player.average_points|round(1) }}<br />
+	<strong>Total points</strong>: {{ player.total_points|round(1) }}<br />
+	</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock main %}
