@@ -52,6 +52,11 @@
             <li class="nav-item">
               <a class="nav-link" href="/draft_round">NFL Draft Round</a>
             </li>
+	    {% for franchise in franchises %}
+            <li class="nav-item">
+	      <a class="nav-link" href="/{{ franchise.franchise_id }}/">{{ franchise.name }}</a>
+            </li>
+	    {% endfor %}
           </ul>
 
         </nav>

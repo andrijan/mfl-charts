@@ -1,3 +1,5 @@
+from datetime import date, datetime
+
 from django.db import models
 
 
@@ -49,7 +51,38 @@ class Player(models.Model):
     team = models.CharField(max_length=255, blank=True, null=True)
     twitter_username = models.CharField(max_length=255, blank=True, null=True)
     franchise = models.ForeignKey(Franchise, related_name="players")
+    adp = models.FloatField(blank=True, null=True)
+    dynasty_adp = models.FloatField(blank=True, null=True)
 
     @property
     def games(self):
         return int(round(self.total_points / self.average_points))
+
+    @property
+    def age(self):
+        today = date.today()
+        if self.birthdate:
+            born = datetime.fromtimestamp(float(self.birthdate))
+            age = (
+                today.year -
+                born.year -
+                ((today.month, today.day) < (born.month, born.day))
+            )
+            return age
+        return None
+
+
+class Result(models.Model):
+    franchise = models.ForeignKey(Franchise)
+    players = models.ManyToManyField(Player, through="PlayerResult")
+    week = models.IntegerField()
+    year = models.IntegerField()
+    result = models.CharField(max_length=10)
+
+
+class PlayerResult(models.Model):
+    result = models.ForeignKey(Result)
+    player = models.ForeignKey(Player)
+    started = models.BooleanField()
+    should_have_started = models.BooleanField()
+    points = models.FloatField(default=0.0)

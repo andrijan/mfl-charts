@@ -11,29 +11,35 @@ class Franchise(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(Franchise, self).get_context_data(**kwargs)
-        rbs = self.object.players.filter(position="RB").order_by(
-            '-average_points'
+        franchises = models.Franchise.objects.all()
+        context['franchises'] = franchises
+        players = self.object.players.all().order_by('-total_points')
+        adp = players.exclude(
+            adp__isnull=True
+        ).exclude(
+            adp__gt=180
+        ).order_by(
+            'adp'
         ).values_list(
-            'name', 'average_points'
+            'name', 'adp', 'dynasty_adp',
+        )
+        context['adp'] = json.dumps(list(adp))
+        context['players'] = players
+        rbs = players.filter(position="RB").values_list(
+            'name', 'average_points', 'total_points',
         )
         context['rbs'] = json.dumps(list(rbs))
-        wrs = self.object.players.filter(position="WR").order_by(
-            '-average_points'
-        ).values_list(
-            'name', 'average_points'
+        wrs = players.filter(position="WR").values_list(
+            'name', 'average_points', 'total_points',
         )
         context['wrs'] = json.dumps(list(wrs))
-        tes = self.object.players.filter(position="TE").order_by(
-            '-average_points'
-        ).values_list(
-            'name', 'average_points'
+        tes = players.filter(position="TE").values_list(
+            'name', 'average_points', 'total_points',
         )
         context['tes'] = json.dumps(list(tes))
-        qbs = self.object.players.filter(position="QB").order_by(
-            '-average_points'
-        ).values_list(
-            'name', 'average_points'
+        qbs = players.filter(position="QB").values_list(
+            'name', 'average_points', 'total_points',
         )
         context['qbs'] = json.dumps(list(qbs))
-        context['graph_class'] = 'playerAvgPoints'
+        context['graph_class'] = 'playerPoints'
         return context

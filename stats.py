@@ -83,13 +83,14 @@ def get_players(position=None, franchise_id=None):
             p['age'] = age
             p['average_points'] = float(average['score'])
             p['total_points'] = float(total['score'])
+            p['player_id'] = p['id']
             if position:
                 if p['position'] != position:
                     continue
             name = p['name'].split(',')
             p['name'] = name[1].strip() + " " + name[0]
             players.append(p)
-        roster_players[r['id']] = r['name']
+        roster_players[r['id']] = players
     return roster_players
 
 

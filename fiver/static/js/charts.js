@@ -141,38 +141,117 @@ $(".draftRound").each(function() {
   });
 });
 
-$(".playerAvgPoints").each(function() {
+$(".playerPoints").each(function() {
   var data = $(this).data('distribution');
   var title = $(this).data('title');
   var labels = data.map(function(value, index) { return value[0]; });
-  var points = data.map(function(value, index) { return value[1]; });
+  var avg_points = data.map(function(value, index) { return value[1]; });
+  var total_points = data.map(function(value, index) { return value[2]; });
 
   var myChart = new Chart(this, {
     type: 'line',
     data: {
       labels: labels,
-      datasets: [{
-	label: title,
-	data: points,
-	backgroundColor: 'rgba(255, 99, 132, 0.2)',
-	borderColor: 'rgba(255,99,132,1)',
-	borderWidth: 1
-      }]
+      datasets: [
+	{
+	  label: "Total points",
+	  data: total_points,
+	  yAxisID: "total",
+	  borderColor: 'rgba(0, 183, 238, 1)',
+	  borderWidth: 2,
+	  fill: false,
+	},
+	{
+	  label: "Points per game",
+	  data: avg_points,
+	  yAxisID: "average",
+	  borderColor: 'rgba(140, 198, 62, 1)',
+	  borderWidth: 2,
+	  fill: false,
+	},
+      ]
     },
     options: {
       scales: {
 	xAxes: [{
 	  ticks: {
-	    autoSkip: false
+	    autoSkip: false,
+	    maxRotation: 45,
+	    minRotation: 45,
 	  }
 	}],
-	yAxes: [{
-	  ticks: {
-	    max: 18,
-	    min: 0,
-	    stepSize: 1,
+	yAxes: [
+	  {
+	    id: 'average',
+	    position: 'right',
+	    display: false,
+	    ticks: {
+	      max: 25,
+	      min: 0,
+	      stepSize: 5,
+	    }
+	  },
+	  {
+	    id: 'total',
+	    position: 'left',
+	    ticks: {
+	      max: 400,
+	      min: 0,
+	      stepSize: 50,
+	    }
 	  }
-	}]
+	]
+      }
+    },
+  });
+});
+
+$(".adp").each(function() {
+  var data = $(this).data('distribution');
+  var title = $(this).data('title');
+  var labels = data.map(function(value, index) { return value[0]; });
+  var adp = data.map(function(value, index) { return value[1]; });
+  var dynasty_adp = data.map(function(value, index) { return value[2]; });
+
+  var myChart = new Chart(this, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+	{
+	  label: "ADP",
+	  data: adp,
+	  borderColor: 'rgba(0, 183, 238, 1)',
+	  borderWidth: 2,
+	  fill: false,
+	},
+	{
+	  label: "Dynasty ADP",
+	  data: dynasty_adp,
+	  borderColor: 'rgba(255, 99, 132, 1)',
+	  borderWidth: 2,
+	  fill: false,
+	},
+      ]
+    },
+    options: {
+      scales: {
+	xAxes: [{
+	  ticks: {
+	    autoSkip: false,
+	    maxRotation: 45,
+	    minRotation: 45,
+	  }
+	}],
+	yAxes: [
+	  {
+	    ticks: {
+	      max: 180,
+	      min: 0,
+	      stepSize: 12,
+	    }
+	  },
+	]
       }
     },
   });

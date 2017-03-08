@@ -217,6 +217,37 @@
   <div class="col-6 placeholder">
     <canvas data-title="Tight Ends" data-distribution="{{ tes }}" class="{{ graph_class }}" width="400" height="400"></canvas>
   </div>
+  <div class="col-8 placeholder">
+    <canvas data-title="ADP" data-distribution="{{ adp }}" class="adp" width="400" height="400"></canvas>
+  </div>
 </section>
+<div class="row">
+  {% for player in players %}
+  <div class="col">
+    <div class="card" style="width: 350px; height: 600px;">
+      <h3 class="card-header text-center">{{ player.name }}</h3>
+      {% if player.espn_id %}
+      <img class="card-img-top" src="http://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{{ player.espn_id }}.png&w=350&h=254" />
+      {% else %}
+      <img class="card-img-top" src="http://static.nfl.com/static/content/public/static/img/fantasy/transparent/200x200/MCR391962.png" />
+      {% endif %}
+      <div class="card-block">
+	<p class="card-text">
+	<strong>Team</strong>: {{ player.team }}<br />
+	<strong>Position</strong>: {{ player.position }}<br />
+	<strong>Age</strong>: {{ player.age }}<br />
+	<strong>Avg points</strong>: {{ player.average_points|round(1) }}<br />
+	<strong>Total points</strong>: {{ player.total_points|round(1) }}<br />
+	<strong>ADP</strong>: {{ player.adp }}<br />
+	<strong>Starts</strong>: {{ player.playerresult_set.filter(started=True, result__franchise=player.franchise).count() }}<br />
+	<strong>Should have started</strong>: {{ player.playerresult_set.filter(should_have_started=True, result__franchise=player.franchise).count() }}<br />
+	<strong>Should have started, but didn't</strong>: {{ player.playerresult_set.filter(started=False, should_have_started=True, result__franchise=player.franchise).count() }}<br />
+	<strong>Should have benched, but didn't</strong>: {{ player.playerresult_set.filter(started=True, should_have_started=False, result__franchise=player.franchise).count() }}<br />
+	</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
 {% endblock main %}
 
