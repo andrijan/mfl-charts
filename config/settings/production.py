@@ -1,0 +1,7 @@
+import dj_database_url
+from .common import *  # noqa
+
+INSTALLED_APPS += ("gunicorn", )  # noqa
+
+db_from_env = dj_database_url.config()
+DATABASES['default'].update(db_from_env)  # noqa

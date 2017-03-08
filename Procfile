@@ -1,2 +1,2 @@
-release: python fiver/manage.py migrate; python fiver/manage.py populate_data
-web: gunicorn fiver.wsgi:application
+release: python manage.py migrate
+web: gunicorn config.wsgi:application
