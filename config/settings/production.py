@@ -7,7 +7,7 @@ env = environ.Env()
 
 ALLOWED_HOSTS = env.list(
     'DJANGO_ALLOWED_HOSTS',
-    default=['fiver-dynastry.herokuapp.com']
+    default=['fiver-dynasty.herokuapp.com']
 )
 INSTALLED_APPS += ("gunicorn", )  # noqa
 
