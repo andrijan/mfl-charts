@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from datetime import date, datetime
 from urllib.request import urlopen
 
-from stats import Api
+from apps.mfl.api import Api
 
 from . import models
 
@@ -52,7 +52,7 @@ def populate_franchises(league_id, year):
     today = date.today()
     for roster in rosters:
         r = next((item for item in league if item['id'] == roster['id']))
-        f = models.Franchise.objects.create(
+        f, _ = models.Franchise.objects.get_or_create(
             franchise_id=r['id'],
             name=r['name']
         )
@@ -92,7 +92,10 @@ def populate_franchises(league_id, year):
             name = p['name'].split(',')
             p['name'] = name[1].strip() + " " + name[0]
 
-            player = models.Player(franchise=f)
+            try:
+                player = models.Player.objects.get(player_id=p['player_id'])
+            except models.Player.DoesNotExist:
+                player = models.Player(franchise=f)
             for key, value in p.items():
                 try:
                     setattr(player, key, value)
@@ -115,7 +118,7 @@ def populate_results(league_id, year):
         for matchup in matchups:
             for franchise in matchup['franchise']:
                 f = models.Franchise.objects.get(franchise_id=franchise['id'])
-                result = models.Result.objects.create(
+                result, _ = models.Result.objects.get_or_create(
                     franchise=f,
                     week=week['week'],
                     year=year,
@@ -126,7 +129,7 @@ def populate_results(league_id, year):
                         p = models.Player.objects.get(player_id=player['id'])
                     except models.Player.DoesNotExist:
                         continue
-                    models.PlayerResult.objects.create(
+                    models.PlayerResult.objects.get_or_create(
                         result=result,
                         player=p,
                         started=player['status'] == 'starter',
