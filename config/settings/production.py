@@ -1,11 +1,8 @@
-import environ
 import dj_database_url
 
 from .common import *  # noqa
 
-env = environ.Env()
-
-ALLOWED_HOSTS = env.list(
+ALLOWED_HOSTS = env.list(  # noqa
     'DJANGO_ALLOWED_HOSTS',
     default=['fiver-dynasty.herokuapp.com']
 )
