@@ -5,6 +5,12 @@ Display charts for MFL leagues
 Create a `virtualenv` (Python 3)
 ```
 pip install -r requirements.txt
-export FLASK_APP=stats.py
-flask run
+python fiver/manage.py migrate
+python fiver/manage.py shell_plus
+```
+```Python
+from apps.stats.populate import *
+populate_franchises(LEAGUE_ID, CURRENT_YEAR)
+populate_results(LEAGUE_ID, LAST_YEAR)
+populate_adp()
 ```
