@@ -16,7 +16,6 @@ var dynamicColors = function() {
 $(".playerAge").each(function() {
   var data = $(this).data('distribution');
   var title = $(this).data('title');
-  data = JSON.parse(data.replace(/\(/g, "[").replace(/\)/g, "]"));
   var labels = data.map(function(value, index) { return value[0]; });
   var ages = data.map(function(value, index) { return value[1]; });
 
