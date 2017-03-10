@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from datetime import date, datetime
 from urllib.request import urlopen
 
-from apps.mfl.api import Api
+from fiver.apps.mfl.api import Api
 
 from . import models
 
@@ -136,3 +136,81 @@ def populate_results(league_id, year):
                         should_have_started=player['shouldStart'] == '1',
                         points=player['score'] or 0.0,
                     )
+
+
+def populate_picks(league_id, year):
+    instance = Api(year)
+    franchise_picks = instance.future_draft_picks(
+        league_id
+    )['futureDraftPicks']['franchise']
+    for franchise in franchise_picks:
+        for pick in franchise['futureDraftPick']:
+            models.Pick.objects.create(
+                draft_year=pick['year'],
+                draft_round=pick['round'],
+                franchise_id=pick['originalPickFor'],
+                current_franchise_id=franchise['id'],
+            )
+
+
+def populate_trades(league_id, year):
+    instance = Api(year)
+    trades = instance.transactions(
+        league_id, transaction_type="trade"
+    )['transactions']['transaction']
+
+    for trade in trades:
+        t, created = models.Trade.objects.get_or_create(
+            timestamp=trade['timestamp'],
+            accepted=True
+        )
+        if created:
+            offer1 = models.TradeOffer.objects.create(
+                franchise_id=trade['franchise'],
+                trade=t,
+                is_initiator=True,
+            )
+            franchise1_gave_up = trade['franchise1_gave_up'].split(',')[:-1]
+            for pick_or_player in franchise1_gave_up:
+                if pick_or_player.startswith('FP'):
+                    (
+                        franchise_id,
+                        draft_year,
+                        draft_round,
+                    ) = pick_or_player.split('_')[1:]
+                    pick = models.Pick.objects.get(
+                        draft_year=draft_year,
+                        draft_round=draft_round,
+                        franchise_id=franchise_id
+                    )
+                    offer1.picks.add(pick)
+                else:
+                    player = models.Player.objects.get(
+                        player_id=pick_or_player
+                    )
+                    offer1.players.add(player)
+            offer1.save()
+            offer2 = models.TradeOffer.objects.create(
+                franchise_id=trade['franchise2'],
+                trade=t,
+                is_initiator=True,
+            )
+            franchise2_gave_up = trade['franchise2_gave_up'].split(',')[:-1]
+            for pick_or_player in franchise2_gave_up:
+                if pick_or_player.startswith('FP'):
+                    (
+                        franchise_id,
+                        draft_year,
+                        draft_round,
+                    ) = pick_or_player.split('_')[1:]
+                    pick = models.Pick.objects.get(
+                        draft_year=draft_year,
+                        draft_round=draft_round,
+                        franchise_id=franchise_id
+                    )
+                    offer2.picks.add(pick)
+                else:
+                    player = models.Player.objects.get(
+                        player_id=pick_or_player
+                    )
+                    offer2.players.add(player)

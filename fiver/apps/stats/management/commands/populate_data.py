@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.stats.populate import (
+from fiver.apps.stats.populate import (
     populate_adp,
     populate_franchises,
     populate_results,

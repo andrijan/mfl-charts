@@ -43,6 +43,7 @@ class Franchise(DetailView):
         )
         context['qbs'] = json.dumps(list(qbs))
         context['graph_class'] = 'playerPoints'
+
         return context
 
 

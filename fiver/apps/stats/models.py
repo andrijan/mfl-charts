@@ -30,7 +30,9 @@ class Franchise(models.Model):
             player_id__in=ids
         ).order_by(ordering)
         field = ''.join(ordering.split('-'))
-        kwargs = {field + '__gte': getattr(self.player(position, rank), field)}
+        kwargs = {field + '__gte': getattr(
+            self.player(position, rank, ordering), field
+        )}
         index = players.filter(**kwargs).count()
         return index
 
@@ -113,7 +115,12 @@ class Player(models.Model):
     position = models.CharField(max_length=255, blank=True, null=True)
     team = models.CharField(max_length=255, blank=True, null=True)
     twitter_username = models.CharField(max_length=255, blank=True, null=True)
-    franchise = models.ForeignKey(Franchise, related_name="players")
+    franchise = models.ForeignKey(
+        Franchise,
+        related_name="players",
+        blank=True,
+        null=True
+    )
     adp = models.FloatField(blank=True, null=True)
     dynasty_adp = models.FloatField(blank=True, null=True)
 
@@ -133,6 +140,30 @@ class Player(models.Model):
             )
             return age
         return None
+
+
+class Pick(models.Model):
+    draft_year = models.IntegerField()
+    draft_round = models.IntegerField()
+    franchise = models.ForeignKey(Franchise, related_name="original_picks")
+    current_franchise = models.ForeignKey(
+        Franchise,
+        related_name="current_picks"
+    )
+
+
+class Trade(models.Model):
+    franchises = models.ManyToManyField(Franchise, through="TradeOffer")
+    timestamp = models.IntegerField()
+    accepted = models.BooleanField()
+
+
+class TradeOffer(models.Model):
+    franchise = models.ForeignKey(Franchise, related_name="tradeoffers")
+    trade = models.ForeignKey(Trade)
+    players = models.ManyToManyField(Player)
+    picks = models.ManyToManyField(Pick)
+    is_initiator = models.BooleanField()
 
 
 class Result(models.Model):
