@@ -1,5 +1,6 @@
 import json
 
+from django.db.models import Q
 from django.views.generic import DetailView
 from django.views.generic.list import ListView
 
@@ -17,8 +18,8 @@ class Franchise(DetailView):
         players = self.object.players.all().order_by('-total_points')
         adp = players.exclude(
             adp__isnull=True
-        ).exclude(
-            adp__gt=180
+        ).filter(
+            Q(adp__lte=180) | Q(dynasty_adp__lte=180)
         ).order_by(
             'adp'
         ).values_list(
