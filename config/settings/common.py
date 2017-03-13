@@ -64,6 +64,9 @@ TEMPLATES = [
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
+            'extensions': [
+                'jdj_tags.extensions.DjangoCompat',
+            ],
         },
     },
 ]

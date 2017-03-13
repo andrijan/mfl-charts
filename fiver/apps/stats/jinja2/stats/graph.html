@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>{{ object.name }}</h1>
+<section class="row text-center placeholders">
+  <div class="col-6 placeholder">
+    <canvas data-title="{{ title }}" data-distribution="{{ distribution }}" class="{{ class }}" width="400" height="400"></canvas>
+  </div>
+</section>
+{% endblock main %}

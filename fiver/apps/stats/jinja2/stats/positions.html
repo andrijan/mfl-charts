@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>{{ object.name }}</h1>
+<div class="row">
+  <div class="col-7">
+    {% for player in players %}
+    <div class="row">
+      <div class="col-4">
+	{% if player.espn_id %}
+	<img class="card-img-top" src="http://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{{ player.espn_id }}.png&w=175&h=127" />
+	{% else %}
+	<img class="card-img-top" src="http://static.nfl.com/static/content/public/static/img/fantasy/transparent/200x200/MCR391962.png" />
+	{% endif %}
+      </div>
+      <div class="col-4">
+	<strong>#{{ player.jersey }} {{ player.name }} ({{ player.age }})</strong><br />
+	<strong>Points</strong>: {{ player.total_points|round(1) }} ({{ player.average_points|round(1) }})<br />
+	<strong>ADP</strong>: {{ player.adp }} ({{ player.dynasty_adp }})<br />
+	<strong>Starts</strong>: {{ player.playerresult_set.filter(started=True, result__franchise=player.franchise).count() }} / {{ player.playerresult_set.filter(started=True, should_have_started=False, result__franchise=player.franchise).count() }} / {{ player.playerresult_set.filter(started=False, should_have_started=True, result__franchise=player.franchise).count() }}<br />
+      </div>
+      <div class="col-4">
+	<strong>H/W</strong>: {{ player.height_cm|round(0) }}cm / {{ player.weight_kg|round(0) }}kg<br />
+	<strong>Draft</strong>: {{ player.draft_round_or_undrafter }} ({{ player.draft_year }})<br />
+	<strong>College</strong>: {{ player.college }}<br />
+	{% if player.twitter_username %}
+	<strong>Twitter</strong>: <a href="https://twitter.com/{{ player.twitter_username }}" target=_blank">@{{ player.twitter_username }}</a><br />
+	{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="col-5">
+    <section class="row text-center placeholders">
+      <div class="col-12 placeholder">
+	<canvas data-title="{{ title }}" data-distribution="{{ distribution }}" class="{{ class }}" width="400" height="400"></canvas>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock main %}

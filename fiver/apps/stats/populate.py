@@ -115,14 +115,46 @@ def populate_results(league_id, year):
             matchups = week['matchup']
         except KeyError:
             continue
+        if 'franchise' in week:
+            # Bye weeks
+            for franchise in week['franchise']:
+                result, _ = models.Result.objects.update_or_create(
+                    franchise_id=franchise['id'],
+                    week=week['week'],
+                    year=year,
+                    result='BYE',
+                    defaults={
+                        'points': franchise['score'],
+                    }
+                )
+                for player in franchise['player']:
+                    try:
+                        p = models.Player.objects.get(player_id=player['id'])
+                    except models.Player.DoesNotExist:
+                        continue
+                    models.PlayerResult.objects.get_or_create(
+                        result=result,
+                        player=p,
+                        started=player['status'] == 'starter',
+                        should_have_started=player['shouldStart'] == '1',
+                        points=player['score'] or 0.0,
+                    )
+
         for matchup in matchups:
             for franchise in matchup['franchise']:
-                f = models.Franchise.objects.get(franchise_id=franchise['id'])
-                result, _ = models.Result.objects.get_or_create(
-                    franchise=f,
+                if franchise['id'] == matchup['franchise'][0]['id']:
+                    opponent_id = matchup['franchise'][1]['id']
+                else:
+                    opponent_id = matchup['franchise'][0]['id']
+                result, _ = models.Result.objects.update_or_create(
+                    franchise_id=franchise['id'],
                     week=week['week'],
                     year=year,
                     result=franchise['result'],
+                    defaults={
+                        'opponent_id': opponent_id,
+                        'points': franchise['score'],
+                    }
                 )
                 for player in franchise['player']:
                     try:

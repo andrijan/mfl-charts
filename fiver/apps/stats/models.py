@@ -129,6 +129,18 @@ class Player(models.Model):
         return int(round(self.total_points / self.average_points))
 
     @property
+    def height_cm(self):
+        return self.height * 2.54
+
+    @property
+    def weight_kg(self):
+        return self.weight * 0.453592
+
+    @property
+    def draft_round_or_undrafter(self):
+        return self.draft_round or "Undrafted"
+
+    @property
     def age(self):
         today = date.today()
         if self.birthdate:
@@ -167,11 +179,13 @@ class TradeOffer(models.Model):
 
 
 class Result(models.Model):
-    franchise = models.ForeignKey(Franchise)
+    franchise = models.ForeignKey(Franchise, related_name='results')
     players = models.ManyToManyField(Player, through="PlayerResult")
+    opponent = models.ForeignKey(Franchise, blank=True, null=True)
     week = models.IntegerField()
     year = models.IntegerField()
     result = models.CharField(max_length=10)
+    points = models.FloatField(blank=True, null=True)
 
 
 class PlayerResult(models.Model):

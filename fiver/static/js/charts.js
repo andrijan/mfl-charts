@@ -255,3 +255,75 @@ $(".adp").each(function() {
     },
   });
 });
+
+$(".points").each(function() {
+  var data = $(this).data('distribution');
+  var title = $(this).data('title');
+  var labels = data.map(function(value, index) { return value[0]; });
+  var points = data.map(function(value, index) { return value[1]; });
+  var averages = data.map(function(value, index) { return value[2]; });
+  var maximums = data.map(function(value, index) { return value[3]; });
+  var minimums = data.map(function(value, index) { return value[4]; });
+
+  var myChart = new Chart(this, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+	{
+	  label: "Points",
+	  data: points,
+	  borderColor: 'rgba(0, 183, 238, 1)',
+	  borderWidth: 2,
+	  fill: false,
+	},
+	{
+	  label: "Average",
+	  data: averages,
+	  pointBackgroundColor: 'rgba(140, 198, 62, 0.5)',
+	  pointRadius: 5,
+	  showLine: false,
+	},
+	{
+	  label: "Maximum",
+	  data: maximums,
+	  pointBackgroundColor: 'rgba(255, 99, 132, 0.5)',
+	  pointRadius: 3,
+	  showLine: false,
+	},
+	{
+	  label: "Minimum",
+	  data: minimums,
+	  pointBackgroundColor: 'rgba(255, 99, 132, 0.5)',
+	  pointRadius: 3,
+	  showLine: false,
+	},
+      ]
+    },
+    options: {
+      title: {
+	display: true,
+	position: 'top',
+	text: title,
+      },
+      scales: {
+	xAxes: [{
+	  ticks: {
+	    autoSkip: false,
+	    maxRotation: 45,
+	    minRotation: 45,
+	  }
+	}],
+	yAxes: [
+	  {
+	    ticks: {
+	      max: 200,
+	      min: 20,
+	      stepSize: 20,
+	    }
+	  },
+	]
+      }
+    },
+  });
+});
