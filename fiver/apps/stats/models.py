@@ -163,6 +163,13 @@ class Pick(models.Model):
         related_name="current_picks"
     )
 
+    def __str__(self):
+        return '{} ({}) ({})'.format(
+            self.draft_year,
+            self.draft_round,
+            self.franchise.name
+        )
+
 
 class Trade(models.Model):
     franchises = models.ManyToManyField(Franchise, through="TradeOffer")
@@ -176,6 +183,38 @@ class TradeOffer(models.Model):
     players = models.ManyToManyField(Player)
     picks = models.ManyToManyField(Pick)
     is_initiator = models.BooleanField()
+
+    @property
+    def other_franchise(self):
+        return TradeOffer.objects.get(
+            trade=self.trade,
+            is_initiator=not self.is_initiator
+        )
+
+    @property
+    def giving_up(self):
+        players_and_picks = []
+        for player in self.players.all():
+            players_and_picks.append(player.name)
+        for pick in self.picks.all():
+            players_and_picks.append(pick.__str__())
+        return players_and_picks
+
+    @property
+    def receiving(self):
+        players_and_picks = []
+        for player in self.other_franchise.players.all():
+            players_and_picks.append(player.name)
+        for pick in self.other_franchise.picks.all():
+            players_and_picks.append(pick.__str__())
+        return players_and_picks
+
+    @property
+    def date(self):
+        return datetime.fromtimestamp(float(self.trade.timestamp))
+
+    class Meta:
+        ordering = ('trade__timestamp', )
 
 
 class Result(models.Model):

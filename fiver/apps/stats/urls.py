@@ -4,26 +4,6 @@ from . import views
 
 urlpatterns = [
     url(
-        r'^age_distribution/$',
-        views.FranchiseAge.as_view(),
-        name='franchise_age_distribution',
-    ),
-    url(
-        r'^college_distribution/$',
-        views.FranchiseCollege.as_view(),
-        name='franchise_college_distribution',
-    ),
-    url(
-        r'^draft_round_distribution/$',
-        views.FranchiseDraftRound.as_view(),
-        name='franchise_draft_round_distribution',
-    ),
-    url(
-        r'^weight_height_distribution/$',
-        views.FranchiseWeightHeight.as_view(),
-        name='franchise_weight_height_distribution',
-    ),
-    url(
         r'^(?P<franchise_id>[\w-]+)/$',
         views.FranchiseBase.as_view(),
         name='franchise_details',
@@ -37,5 +17,35 @@ urlpatterns = [
         r'^(?P<franchise_id>[\w-]+)/position/(?P<position>[\w-]+)/$',
         views.PositionBase.as_view(),
         name='franchise_positions',
+    ),
+    url(
+        r'^(?P<franchise_id>[\w-]+)/age/$',
+        views.FranchiseAge.as_view(),
+        name='franchise_age',
+    ),
+    url(
+        r'^(?P<franchise_id>[\w-]+)/college/$',
+        views.FranchiseCollege.as_view(),
+        name='franchise_college',
+    ),
+    url(
+        r'^(?P<franchise_id>[\w-]+)/weight_height/$',
+        views.FranchiseWeightHeight.as_view(),
+        name='franchise_weight_height',
+    ),
+    url(
+        r'^(?P<franchise_id>[\w-]+)/draft_round/$',
+        views.FranchiseDraftRound.as_view(),
+        name='franchise_draft_round',
+    ),
+    url(
+        r'^(?P<franchise_id>[\w-]+)/adp/$',
+        views.AverageDraftPosition.as_view(),
+        name='franchise_adp',
+    ),
+    url(
+        r'^(?P<franchise_id>[\w-]+)/trades/$',
+        views.Trades.as_view(),
+        name='franchise_trades',
     ),
 ]

@@ -225,7 +225,7 @@ def populate_trades(league_id, year):
             offer2 = models.TradeOffer.objects.create(
                 franchise_id=trade['franchise2'],
                 trade=t,
-                is_initiator=True,
+                is_initiator=False,
             )
             franchise2_gave_up = trade['franchise2_gave_up'].split(',')[:-1]
             for pick_or_player in franchise2_gave_up:

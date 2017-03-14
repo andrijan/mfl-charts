@@ -2,7 +2,6 @@ import json
 
 from django.db.models import Avg, Max, Min, Q
 from django.views.generic import DetailView
-from django.views.generic.list import ListView
 
 from . import models
 
@@ -16,18 +15,8 @@ class FranchiseBase(DetailView):
         franchises = models.Franchise.objects.all()
         context['franchises'] = franchises
 
-        players = self.object.players.all().order_by('-total_points')
-        adp = players.exclude(
-            adp__isnull=True
-        ).filter(
-            Q(adp__lte=180) | Q(dynasty_adp__lte=180)
-        ).order_by(
-            'adp'
-        ).values_list(
-            'name', 'adp', 'dynasty_adp',
-        )
-        context['adp'] = json.dumps(list(adp))
-        context['players'] = players
+        self.players = self.object.players.all().order_by('-total_points')
+        context['players'] = self.players
         return context
 
 
@@ -62,6 +51,7 @@ class PointsPerWeek(FranchiseBase):
         )))
         context['title'] = 'Points per week'
         context['class'] = 'points'
+        context['active'] = 'ppw'
 
         return context
 
@@ -81,64 +71,85 @@ class PositionBase(FranchiseBase):
         )
         context['distribution'] = json.dumps(list(partial_players))
         context['class'] = 'playerPoints'
+        context['active'] = self.kwargs['position'].lower()
         return context
 
 
-class FranchiseAge(ListView):
-    model = models.Franchise
-    template_name = 'stats/graphs.html'
-    context_object_name = 'franchises'
+class FranchiseAge(FranchiseBase):
+    template_name = 'stats/graph.html'
 
     def get_context_data(self, **kwargs):
         context = super(FranchiseAge, self).get_context_data(**kwargs)
-        context['graph_class'] = 'playerAge'
+        context['class'] = 'playerAge'
+        context['active'] = 'age'
         context['title'] = 'Age distribution'
-        context['function'] = 'age_distribution'
-        context['getattr'] = getattr
-        context['position'] = self.request.GET.get('position', None)
+        context['distribution'] = self.object.age_distribution()
         return context
 
 
-class FranchiseCollege(ListView):
-    model = models.Franchise
-    template_name = 'stats/graphs.html'
-    context_object_name = 'franchises'
+class FranchiseCollege(FranchiseBase):
+    template_name = 'stats/graph.html'
 
     def get_context_data(self, **kwargs):
         context = super(FranchiseCollege, self).get_context_data(**kwargs)
-        context['graph_class'] = 'playerColleges'
+        context['class'] = 'playerColleges'
+        context['active'] = 'colleges'
         context['title'] = 'College distribution'
-        context['function'] = 'college_distribution'
-        context['getattr'] = getattr
-        context['position'] = self.request.GET.get('position', None)
+        context['distribution'] = self.object.college_distribution()
         return context
 
 
-class FranchiseDraftRound(ListView):
-    model = models.Franchise
-    template_name = 'stats/graphs.html'
-    context_object_name = 'franchises'
-
-    def get_context_data(self, **kwargs):
-        context = super(FranchiseDraftRound, self).get_context_data(**kwargs)
-        context['graph_class'] = 'draftRound'
-        context['title'] = 'Draft Round distribution'
-        context['function'] = 'draft_round_distribution'
-        context['getattr'] = getattr
-        context['position'] = self.request.GET.get('position', None)
-        return context
-
-
-class FranchiseWeightHeight(ListView):
-    model = models.Franchise
-    template_name = 'stats/graphs.html'
-    context_object_name = 'franchises'
+class FranchiseWeightHeight(FranchiseBase):
+    template_name = 'stats/graph.html'
 
     def get_context_data(self, **kwargs):
         context = super(FranchiseWeightHeight, self).get_context_data(**kwargs)
-        context['graph_class'] = 'playerWeightHeight'
+        context['class'] = 'playerWeightHeight'
+        context['active'] = 'wah'
         context['title'] = 'Weight height distribution'
-        context['function'] = 'weight_height_distribution'
-        context['getattr'] = getattr
-        context['position'] = self.request.GET.get('position', None)
+        context['distribution'] = self.object.weight_height_distribution()
+        return context
+
+
+class FranchiseDraftRound(FranchiseBase):
+    template_name = 'stats/graph.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(FranchiseDraftRound, self).get_context_data(**kwargs)
+        context['class'] = 'draftRound'
+        context['active'] = 'draft'
+        context['title'] = 'Draft Round distribution'
+        context['distribution'] = self.object.draft_round_distribution()
+        return context
+
+
+class AverageDraftPosition(FranchiseBase):
+    template_name = 'stats/graph.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AverageDraftPosition, self).get_context_data(**kwargs)
+        adp = self.players.exclude(
+            adp__isnull=True
+        ).filter(
+            Q(adp__lte=180) | Q(dynasty_adp__lte=180)
+        ).order_by(
+            'adp'
+        ).values_list(
+            'name', 'adp', 'dynasty_adp',
+        )
+        context['title'] = 'ADP'
+        context['class'] = 'adp'
+        context['active'] = 'adp'
+        context['distribution'] = json.dumps(list(adp))
+        return context
+
+
+class Trades(FranchiseBase):
+    template_name = 'stats/trades.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(Trades, self).get_context_data(**kwargs)
+        trade_offers = models.TradeOffer.objects.filter(franchise=self.object)
+        context['trades'] = trade_offers
+        context['active'] = 'trades'
         return context
