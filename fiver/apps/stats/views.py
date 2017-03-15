@@ -153,3 +153,14 @@ class Trades(FranchiseBase):
         context['trades'] = trade_offers
         context['active'] = 'trades'
         return context
+
+
+class Draft(FranchiseBase):
+    template_name = 'stats/draft.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(Draft, self).get_context_data(**kwargs)
+        players = models.PlayerDraft.objects.filter(franchise=self.object)
+        context['drafted_players'] = players
+        context['active'] = 'drafted_players'
+        return context

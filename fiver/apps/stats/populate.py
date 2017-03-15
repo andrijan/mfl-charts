@@ -7,6 +7,23 @@ from fiver.apps.mfl.api import Api
 from . import models
 
 
+def populate_all_players(year):
+    inst = Api(year)
+    all_players = inst.players(details=True)['players']['player']
+    for player in all_players:
+        if player['position'] not in ['RB', 'WR', 'TE', 'QB', 'Def']:
+            continue
+        p, created = models.Player.objects.get_or_create(
+            player_id=player['id']
+        )
+        for key, value in player.items():
+            try:
+                setattr(p, key, value)
+            except:
+                pass
+        p.save()
+
+
 def populate_adp():
     base_url = 'https://www.fantasypros.com/nfl/rankings/'
     ppr = base_url + 'half-point-ppr-cheatsheets.php'
@@ -246,3 +263,20 @@ def populate_trades(league_id, year):
                         player_id=pick_or_player
                     )
                     offer2.players.add(player)
+
+
+def populate_auction_draft(league_id, year):
+    instance = Api(year)
+    draft = instance.auction_results(
+        league_id
+    )['auctionResults']['auctionUnit']
+    for pick in draft['auction']:
+        models.PlayerDraft.objects.get_or_create(
+            franchise_id=pick['franchise'],
+            player_id=pick['player'],
+            timestamp=pick['lastBidTime'],
+            defaults={
+                'bid_amount': pick['winningBid'],
+                'draft_year': year,
+            }
+        )

@@ -48,4 +48,9 @@ urlpatterns = [
         views.Trades.as_view(),
         name='franchise_trades',
     ),
+    url(
+        r'^(?P<franchise_id>[\w-]+)/draft/$',
+        views.Draft.as_view(),
+        name='franchise_draft',
+    ),
 ]

@@ -162,6 +162,7 @@ class Pick(models.Model):
         Franchise,
         related_name="current_picks"
     )
+    draft_pick = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return '{} ({}) ({})'.format(
@@ -233,3 +234,20 @@ class PlayerResult(models.Model):
     started = models.BooleanField()
     should_have_started = models.BooleanField()
     points = models.FloatField(default=0.0)
+
+
+class PlayerDraft(models.Model):
+    franchise = models.ForeignKey(Franchise)
+    player = models.ForeignKey(Player)
+    timestamp = models.IntegerField(blank=True, null=True)
+    bid_amount = models.IntegerField(blank=True, null=True)
+    draft_round = models.IntegerField(blank=True, null=True)
+    draft_pick = models.IntegerField(blank=True, null=True)
+    draft_year = models.IntegerField()
+
+    @property
+    def date(self):
+        return datetime.fromtimestamp(float(self.timestamp))
+
+    class Meta:
+        ordering = ('-bid_amount', 'draft_round', 'draft_pick')

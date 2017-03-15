@@ -74,6 +74,9 @@
             <li class="nav-item">
               <a class="nav-link {% if active == "trades" %}active{% endif %}" href="{% url 'franchise_trades' object.franchise_id %}">Trades</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link {% if active == "drafted_players" %}active{% endif %}" href="{% url 'franchise_draft' object.franchise_id %}">Draft</a>
+            </li>
           </ul>
 
         </nav>
