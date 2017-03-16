@@ -175,3 +175,14 @@ class Waivers(FranchiseBase):
         context['waivers'] = waivers
         context['active'] = 'waivers'
         return context
+
+
+class Player(DetailView):
+    model = models.Player
+    pk_url_kwarg = 'player_id'
+
+    def get_context_data(self, **kwargs):
+        context = super(Player, self).get_context_data(**kwargs)
+        franchises = models.Franchise.objects.all()
+        context['franchises'] = franchises
+        return context

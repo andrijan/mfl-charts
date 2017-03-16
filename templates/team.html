@@ -6,7 +6,7 @@
   {% for player in players %}
   <div class="col">
     <div class="card" style="width: 350px; height: 450px;">
-      <h3 class="card-header text-center">{{ player.name }}</h3>
+      <h3 class="card-header text-center"><a href="{% url 'player_detail' player.player_id %}">{{ player.readable_name }}</a></h3>
       {% if player.espn_id %}
       <img class="card-img-top" src="http://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{{ player.espn_id }}.png&w=350&h=254" />
       {% else %}

@@ -13,7 +13,7 @@
 	{% endif %}
       </div>
       <div class="col-4">
-	<strong>#{{ player.jersey }} {{ player.name }} ({{ player.age }})</strong><br />
+	<strong><a href="{% url 'player_detail' player.player_id %}">#{{ player.jersey }} {{ player.readable_name }} ({{ player.age }})</a></strong><br />
 	<strong>Points</strong>: {{ player.total_points|round(1) }} ({{ player.average_points|round(1) }})<br />
 	<strong>ADP</strong>: {{ player.adp }} ({{ player.dynasty_adp }})<br />
 	<strong>Starts</strong>: {{ player.playerresult_set.filter(started=True, result__franchise=player.franchise).count() }} / {{ player.playerresult_set.filter(started=True, should_have_started=False, result__franchise=player.franchise).count() }} / {{ player.playerresult_set.filter(started=False, should_have_started=True, result__franchise=player.franchise).count() }}<br />

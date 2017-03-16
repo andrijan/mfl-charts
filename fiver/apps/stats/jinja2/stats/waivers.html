@@ -15,7 +15,7 @@
       <tbody>
 	{% for waiver in waivers %}
 	<tr class="{% if waiver.adding %}table-success{% else %}table-danger{% endif %}">
-	  <td>{{ waiver.player.name }}</td>
+	  <td><a href="{% url 'player_detail' waiver.player.player_id %}">{{ waiver.player.readable_name }}</a></td>
 	  <td>
 	    {% if waiver.adding %}
 	    {% if waiver.free_agent %}

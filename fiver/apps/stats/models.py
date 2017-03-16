@@ -153,6 +153,10 @@ class Player(models.Model):
             return age
         return None
 
+    @property
+    def readable_name(self):
+        return " ".join(self.name.split(", ")[::-1])
+
 
 class Pick(models.Model):
     draft_year = models.IntegerField()

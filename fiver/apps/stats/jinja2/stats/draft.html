@@ -15,7 +15,7 @@
       <tbody>
 	{% for player in drafted_players %}
 	<tr>
-	  <td>{{ player.player.name }}</td>
+	  <td><a href="{% url 'player_detail' player.player.player_id %}">{{ player.player.readable_name }}</a></td>
 	  <td>{{ player.bid_amount }}</td>
 	  <td>{{ player.date }}</td>
 	  <td>

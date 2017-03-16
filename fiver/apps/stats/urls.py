@@ -58,4 +58,9 @@ urlpatterns = [
         views.Waivers.as_view(),
         name='franchise_waivers',
     ),
+    url(
+        r'^players/(?P<player_id>[\w-]+)/$',
+        views.Player.as_view(),
+        name='player_detail',
+    ),
 ]

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>{{ object.readable_name }}</h1>
+<div class="row">
+  <div class="col-5">
+  {% if object.espn_id %}
+  <img class="card-img-top" src="http://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{{ object.espn_id }}.png&w=525&h=381" />
+  {% else %}
+  <img class="card-img-top" src="http://placehold.it/525x381/fff.png?text={{ object.name }}" />
+  {% endif %}
+  </div>
+  <div class="col-3">
+    <p class="card-text">
+    <strong>#{{ player.jersey }} {{ player.readable_name }} ({{ player.age }})</strong><br />
+    <strong>Points</strong>: {{ player.total_points|round(1) }} ({{ player.average_points|round(1) }})<br />
+    <strong>ADP</strong>: {{ player.adp }} ({{ player.dynasty_adp }})<br />
+    <strong>H/W</strong>: {{ player.height_cm|round(0) }}cm / {{ player.weight_kg|round(0) }}kg<br />
+    <strong>Draft</strong>: {{ player.draft_round_or_undrafter }} ({{ player.draft_year }})<br />
+    <strong>College</strong>: {{ player.college }}<br />
+    {% if player.twitter_username %}
+    <strong>Twitter</strong>: <a href="https://twitter.com/{{ player.twitter_username }}" target=_blank">@{{ player.twitter_username }}</a><br />
+    {% endif %}
+    </p>
+  </div>
+  <div class="col-4">
+    <a class="twitter-timeline" href="https://twitter.com/{{ player.twitter_username }}">Tweets by {{ player.twitter_username }}</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+  </div>
+</div>
+{% endblock main %}
