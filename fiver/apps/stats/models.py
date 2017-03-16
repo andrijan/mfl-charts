@@ -251,3 +251,19 @@ class PlayerDraft(models.Model):
 
     class Meta:
         ordering = ('-bid_amount', 'draft_round', 'draft_pick')
+
+
+class Waiver(models.Model):
+    franchise = models.ForeignKey(Franchise)
+    player = models.ForeignKey(Player)
+    timestamp = models.IntegerField()
+    amount = models.IntegerField(default=0)
+    free_agent = models.BooleanField()
+    adding = models.BooleanField()
+
+    @property
+    def date(self):
+        return datetime.fromtimestamp(float(self.timestamp))
+
+    class Meta:
+        ordering = ('-timestamp', )

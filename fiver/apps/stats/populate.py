@@ -280,3 +280,50 @@ def populate_auction_draft(league_id, year):
                 'draft_year': year,
             }
         )
+
+
+def populate_waivers(league_id, year):
+    instance = Api(year)
+    blind_waivers = instance.transactions(
+        league_id, transaction_type="bbid_waiver"
+    )['transactions']['transaction']
+    for waiver in blind_waivers:
+        bought_id, amount, sold_id = waiver['transaction'].split('|')
+        models.Waiver.objects.get_or_create(
+            franchise_id=waiver['franchise'],
+            timestamp=waiver['timestamp'],
+            player_id=bought_id,
+            amount=int(float(amount)),
+            adding=True,
+            free_agent=False,
+        )
+        models.Waiver.objects.get_or_create(
+            franchise_id=waiver['franchise'],
+            timestamp=waiver['timestamp'],
+            player_id=sold_id,
+            adding=False,
+            free_agent=False,
+        )
+    free_agents = instance.transactions(
+        league_id, transaction_type="waiver"
+    )['transactions']['transaction']
+    for free_agent in free_agents:
+        added = free_agent['added'].split(',')[:-1]
+        for player_id in added:
+            models.Waiver.objects.get_or_create(
+                franchise_id=free_agent['franchise'],
+                timestamp=free_agent['timestamp'],
+                player_id=player_id,
+                adding=True,
+                free_agent=True,
+            )
+
+        dropped = free_agent['dropped'].split(',')[:-1]
+        for player_id in dropped:
+            models.Waiver.objects.get_or_create(
+                franchise_id=free_agent['franchise'],
+                timestamp=free_agent['timestamp'],
+                player_id=player_id,
+                adding=False,
+                free_agent=True,
+            )

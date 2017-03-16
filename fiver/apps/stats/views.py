@@ -164,3 +164,14 @@ class Draft(FranchiseBase):
         context['drafted_players'] = players
         context['active'] = 'drafted_players'
         return context
+
+
+class Waivers(FranchiseBase):
+    template_name = 'stats/waivers.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(Waivers, self).get_context_data(**kwargs)
+        waivers = models.Waiver.objects.filter(franchise=self.object)
+        context['waivers'] = waivers
+        context['active'] = 'waivers'
+        return context
