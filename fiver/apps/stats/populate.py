@@ -308,22 +308,24 @@ def populate_waivers(league_id, year):
         league_id, transaction_type="waiver"
     )['transactions']['transaction']
     for free_agent in free_agents:
-        added = free_agent['added'].split(',')[:-1]
+        added = free_agent['added'].split(',')
         for player_id in added:
-            models.Waiver.objects.get_or_create(
-                franchise_id=free_agent['franchise'],
-                timestamp=free_agent['timestamp'],
-                player_id=player_id,
-                adding=True,
-                free_agent=True,
-            )
+            if player_id:
+                models.Waiver.objects.get_or_create(
+                    franchise_id=free_agent['franchise'],
+                    timestamp=free_agent['timestamp'],
+                    player_id=player_id,
+                    adding=True,
+                    free_agent=True,
+                )
 
-        dropped = free_agent['dropped'].split(',')[:-1]
+        dropped = free_agent['dropped'].split(',')
         for player_id in dropped:
-            models.Waiver.objects.get_or_create(
-                franchise_id=free_agent['franchise'],
-                timestamp=free_agent['timestamp'],
-                player_id=player_id,
-                adding=False,
-                free_agent=True,
-            )
+            if player_id:
+                models.Waiver.objects.get_or_create(
+                    franchise_id=free_agent['franchise'],
+                    timestamp=free_agent['timestamp'],
+                    player_id=player_id,
+                    adding=False,
+                    free_agent=True,
+                )
