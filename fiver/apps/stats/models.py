@@ -6,95 +6,19 @@ from datetime import date, datetime
 from django.db import models
 
 
-class Franchise(models.Model):
-    franchise_id = models.CharField(max_length=4, primary_key=True)
+class League(models.Model):
+    league_id = models.CharField(max_length=255)
     name = models.CharField(max_length=255)
+    roster_size = models.IntegerField()
+    injured_reserve = models.IntegerField()
+    taxi_squad = models.IntegerField()
+    start_year = models.IntegerField()
 
-    def player(self, position, rank, ordering='-average_points'):
-        try:
-            return self.players.filter(
-                position=position
-            ).order_by(
-                ordering
-            )[rank]
-        except IndexError:
-            return None
 
-    def place(self, position, rank, ordering='-average_points'):
-        ids = [
-            f.player(
-                position, rank, ordering
-            ).player_id for f in Franchise.objects.all()
-        ]
-        players = Player.objects.filter(
-            player_id__in=ids
-        ).order_by(ordering)
-        field = ''.join(ordering.split('-'))
-        kwargs = {field + '__gte': getattr(
-            self.player(position, rank, ordering), field
-        )}
-        index = players.filter(**kwargs).count()
-        return index
-
-    def age_distribution(self, position=None):
-        """
-        Returns the age distribution for the franchise
-        """
-        player_stats = []
-        players = self.players.exclude(birthdate__isnull=True)
-        if position:
-            players = players.filter(position=position)
-        for player in players:
-            player_stats.append(player.age)
-        age_distribution = Counter(player_stats).most_common()
-        for i in range(20):
-            if i + 20 not in dict(age_distribution):
-                age_distribution.append((i + 20, 0))
-        return json.dumps(sorted(age_distribution))
-
-    def college_distribution(self, position=None):
-        player_stats = []
-        players = self.players.exclude(college__isnull=True)
-        if position:
-            players = players.filter(position=position)
-        for player in players:
-            college = player.college
-            player_stats.append(college)
-        college_distribution = Counter(player_stats).most_common()
-        return json.dumps(sorted(college_distribution))
-
-    def draft_round_distribution(self, position=None):
-        player_stats = []
-        players = self.players.exclude(position="DEF")
-        if position:
-            players = players.filter(position=position)
-        for player in players:
-            if player.draft_round:
-                draft_round = str(player.draft_round)
-            else:
-                draft_round = "Undrafted"
-            player_stats.append(draft_round)
-        draft_round_distribution = Counter(player_stats).most_common()
-        for i in range(7):
-            if str(i + 1) not in dict(draft_round_distribution):
-                draft_round_distribution.append((str(i + 1), 0))
-        if "Undrafted" not in dict(draft_round_distribution):
-            draft_round_distribution.append(("Undrafted", 0))
-        return json.dumps(sorted(draft_round_distribution))
-
-    def weight_height_distribution(self, position=None):
-        player_stats = []
-        players = self.players.exclude(weight__isnull=True)
-        if position:
-            players = players.filter(position=position)
-        for player in players:
-            try:
-                weight = player.weight * 0.453592
-                height = player.height * 2.54
-            except KeyError:
-                continue
-            player_stats.append({'x': weight, 'y': height, 'r': 5})
-        return json.dumps(player_stats)
+class Division(models.Model):
+    division_id = models.CharField(max_length=255)
+    league = models.ForeignKey(League)
+    name = models.CharField(max_length=255)
 
 
 class Player(models.Model):
@@ -110,23 +34,24 @@ class Player(models.Model):
     weight = models.IntegerField(blank=True, null=True)
     jersey = models.IntegerField(blank=True, null=True)
     name = models.CharField(max_length=255, blank=True, null=True)
-    average_points = models.FloatField(blank=True, null=True)
-    total_points = models.FloatField(blank=True, null=True)
     position = models.CharField(max_length=255, blank=True, null=True)
     team = models.CharField(max_length=255, blank=True, null=True)
     twitter_username = models.CharField(max_length=255, blank=True, null=True)
-    franchise = models.ForeignKey(
-        Franchise,
-        related_name="players",
-        blank=True,
-        null=True
-    )
     adp = models.FloatField(blank=True, null=True)
     dynasty_adp = models.FloatField(blank=True, null=True)
 
-    @property
-    def games(self):
-        return int(round(self.total_points / self.average_points))
+    def __str__(self):
+        return self.name
+
+    def franchise(self, league_id):
+        try:
+            fp = FranchisePlayer.objects.get(
+                franchise__league__league_id=league_id,
+                player=self,
+            )
+            return fp.franchise
+        except FranchisePlayer.DoesNotExist:
+            return None
 
     @property
     def height_cm(self):
@@ -153,9 +78,149 @@ class Player(models.Model):
             return age
         return None
 
+
+class Franchise(models.Model):
+    franchise_id = models.CharField(max_length=4)
+    name = models.CharField(max_length=255)
+    division = models.ForeignKey(Division)
+    league = models.ForeignKey(League)
+    players = models.ManyToManyField(Player, through="FranchisePlayer")
+
+    def __str__(self):
+        return self.name
+
+    def player(self, position, rank, ordering='-average_points'):
+        try:
+            return FranchisePlayerPoints.objects.filter(
+                franchise_player__player__position=position
+            ).order_by(
+                ordering
+            )[rank]
+        except IndexError:
+            return None
+
+    def place(self, position, rank, ordering='-average_points'):
+        ids = [f.player(
+            position, rank, ordering
+        ).franchise_player.player.player_id for f in Franchise.objects.all()]
+        players = FranchisePlayerPoints.objects.filter(
+            franchise_player__player__player_id__in=ids
+        ).order_by(ordering)
+        field = ''.join(ordering.split('-'))
+        kwargs = {field + '__gte': getattr(
+            self.player(position, rank, ordering), field
+        )}
+        index = players.filter(**kwargs).count()
+        return index
+
+    def age_distribution(self, position=None):
+        """
+        Returns the age distribution for the franchise
+        """
+        player_stats = []
+        players = self.franchise_players.exclude(
+            player__birthdate__isnull=True
+        )
+        if position:
+            players = players.filter(player__position=position)
+        for player in players:
+            player_stats.append(player.player.age)
+        age_distribution = Counter(player_stats).most_common()
+        for i in range(20):
+            if i + 20 not in dict(age_distribution):
+                age_distribution.append((i + 20, 0))
+        return json.dumps(sorted(age_distribution))
+
+    def college_distribution(self, position=None):
+        player_stats = []
+        players = self.franchise_players.exclude(player__college__isnull=True)
+        if position:
+            players = players.filter(player__position=position)
+        for player in players:
+            college = player.player.college
+            player_stats.append(college)
+        college_distribution = Counter(player_stats).most_common()
+        return json.dumps(sorted(college_distribution))
+
+    def draft_round_distribution(self, position=None):
+        player_stats = []
+        players = self.franchise_players.exclude(player__position="DEF")
+        if position:
+            players = players.filter(player__position=position)
+        for player in players:
+            if player.player.draft_round:
+                draft_round = str(player.player.draft_round)
+            else:
+                draft_round = "Undrafted"
+            player_stats.append(draft_round)
+        draft_round_distribution = Counter(player_stats).most_common()
+        for i in range(7):
+            if str(i + 1) not in dict(draft_round_distribution):
+                draft_round_distribution.append((str(i + 1), 0))
+        if "Undrafted" not in dict(draft_round_distribution):
+            draft_round_distribution.append(("Undrafted", 0))
+        return json.dumps(sorted(draft_round_distribution))
+
+    def weight_height_distribution(self, position=None):
+        player_stats = []
+        players = self.franchise_players.exclude(player__weight__isnull=True)
+        if position:
+            players = players.filter(player__position=position)
+        for player in players:
+            try:
+                weight = player.player.weight * 0.453592
+                height = player.player.height * 2.54
+            except KeyError:
+                continue
+            player_stats.append({'x': weight, 'y': height, 'r': 5})
+        return json.dumps(player_stats)
+
+
+class FranchisePlayer(models.Model):
+    franchise = models.ForeignKey(Franchise, related_name="franchise_players")
+    player = models.ForeignKey(Player)
+
     @property
-    def readable_name(self):
-        return " ".join(self.name.split(", ")[::-1])
+    def name(self):
+        return self.player.name
+
+    @property
+    def height_cm(self):
+        return self.player.height_cm
+
+    @property
+    def weight_kg(self):
+        return self.player.weight_kg
+
+    @property
+    def average_points(self):
+        return self.points.last().average_points
+
+    @property
+    def total_points(self):
+        return self.points.last().total_points
+
+    @property
+    def games(self):
+        return int(round(self.total_points / self.average_points))
+
+
+class FranchisePlayerPoints(models.Model):
+    franchise_player = models.ForeignKey(
+        FranchisePlayer,
+        related_name="points"
+    )
+    year = models.IntegerField()
+    average_points = models.FloatField(blank=True, null=True)
+    total_points = models.FloatField(blank=True, null=True)
+
+    @property
+    def name(self):
+        return self.franchise_player.player.name
+
+    @property
+    def games(self):
+        return int(round(self.total_points / self.average_points))
 
 
 class Pick(models.Model):
@@ -185,7 +250,7 @@ class Trade(models.Model):
 class TradeOffer(models.Model):
     franchise = models.ForeignKey(Franchise, related_name="tradeoffers")
     trade = models.ForeignKey(Trade)
-    players = models.ManyToManyField(Player)
+    players = models.ManyToManyField(Player, related_name="trades")
     picks = models.ManyToManyField(Pick)
     is_initiator = models.BooleanField()
 
@@ -242,7 +307,7 @@ class PlayerResult(models.Model):
 
 class PlayerDraft(models.Model):
     franchise = models.ForeignKey(Franchise)
-    player = models.ForeignKey(Player)
+    player = models.ForeignKey(Player, related_name="drafts")
     timestamp = models.IntegerField(blank=True, null=True)
     bid_amount = models.IntegerField(blank=True, null=True)
     draft_round = models.IntegerField(blank=True, null=True)
@@ -259,7 +324,7 @@ class PlayerDraft(models.Model):
 
 class Waiver(models.Model):
     franchise = models.ForeignKey(Franchise)
-    player = models.ForeignKey(Player)
+    player = models.ForeignKey(Player, related_name="waivers")
     timestamp = models.IntegerField()
     amount = models.IntegerField(default=0)
     free_agent = models.BooleanField()

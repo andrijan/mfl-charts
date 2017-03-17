@@ -15,7 +15,7 @@
       <tbody>
 	{% for waiver in waivers %}
 	<tr class="{% if waiver.adding %}table-success{% else %}table-danger{% endif %}">
-	  <td><a href="{% url 'player_detail' waiver.player.player_id %}">{{ waiver.player.readable_name }}</a></td>
+	  <td><a href="{% url 'player_detail' 76173 waiver.player.player_id %}">{{ waiver.player.name }}</a></td>
 	  <td>
 	    {% if waiver.adding %}
 	    {% if waiver.free_agent %}
@@ -27,9 +27,9 @@
 	  </td>
 	  <td>{{ waiver.date }}</td>
 	  <td>
-	    {% if waiver.player.franchise != object %}
-	    {% if waiver.player.franchise %}
-	    Currently on team: {{ waiver.player.franchise.name }}
+	    {% if waiver.player not in object.players.all() %}
+	    {% if waiver.player.franchise(76173) %}
+	    Currently on team: {{ waiver.player.franchise(76173).name }}
 	    {% else %}
 	    FA
 	    {% endif %}

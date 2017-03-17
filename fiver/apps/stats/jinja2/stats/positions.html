@@ -4,6 +4,8 @@
 <div class="row">
   <div class="col-7">
     {% for player in players %}
+    {% with franchise_player=player.franchise_player %}
+    {% with player=player.franchise_player.player %}
     <div class="row">
       <div class="col-4">
 	{% if player.espn_id %}
@@ -13,10 +15,10 @@
 	{% endif %}
       </div>
       <div class="col-4">
-	<strong><a href="{% url 'player_detail' player.player_id %}">#{{ player.jersey }} {{ player.readable_name }} ({{ player.age }})</a></strong><br />
-	<strong>Points</strong>: {{ player.total_points|round(1) }} ({{ player.average_points|round(1) }})<br />
+	<strong><a href="{% url 'player_detail' 76173 player.player_id %}">#{{ player.jersey }} {{ player.name }} ({{ player.age }})</a></strong><br />
+	<strong>Points</strong>: {{ franchise_player.total_points|round(1) }} ({{ franchise_player.average_points|round(1) }})<br />
 	<strong>ADP</strong>: {{ player.adp }} ({{ player.dynasty_adp }})<br />
-	<strong>Starts</strong>: {{ player.playerresult_set.filter(started=True, result__franchise=player.franchise).count() }} / {{ player.playerresult_set.filter(started=True, should_have_started=False, result__franchise=player.franchise).count() }} / {{ player.playerresult_set.filter(started=False, should_have_started=True, result__franchise=player.franchise).count() }}<br />
+	<strong>Starts</strong>: {{ player.playerresult_set.filter(started=True, result__franchise=franchise_player.franchise).count() }} / {{ player.playerresult_set.filter(started=True, should_have_started=False, result__franchise=franchise_player.franchise).count() }} / {{ player.playerresult_set.filter(started=False, should_have_started=True, result__franchise=franchise_player.franchise).count() }}<br />
       </div>
       <div class="col-4">
 	<strong>H/W</strong>: {{ player.height_cm|round(0) }}cm / {{ player.weight_kg|round(0) }}kg<br />
@@ -27,6 +29,8 @@
 	{% endif %}
       </div>
     </div>
+    {% endwith %}
+    {% endwith %}
     {% endfor %}
   </div>
   <div class="col-5">

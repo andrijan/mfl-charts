@@ -1,5 +1,7 @@
 import json
 
+from operator import itemgetter
+
 from django.db.models import Avg, Max, Min, Q
 from django.views.generic import DetailView
 
@@ -15,7 +17,7 @@ class FranchiseBase(DetailView):
         franchises = models.Franchise.objects.all()
         context['franchises'] = franchises
 
-        self.players = self.object.players.all().order_by('-total_points')
+        self.players = self.object.franchise_players.order_by('-total_points')
         context['players'] = self.players
         return context
 
@@ -61,13 +63,14 @@ class PositionBase(FranchiseBase):
 
     def get_context_data(self, **kwargs):
         context = super(PositionBase, self).get_context_data(**kwargs)
-        players = self.object.players.filter(
-            position=self.kwargs['position']
+        players = models.FranchisePlayerPoints.objects.filter(
+            franchise_player__franchise=self.object,
+            franchise_player__player__position=self.kwargs['position']
         ).order_by('-total_points')
         context['players'] = players
 
         partial_players = players.values_list(
-            'name', 'average_points', 'total_points',
+            'franchise_player__player__name', 'average_points', 'total_points',
         )
         context['distribution'] = json.dumps(list(partial_players))
         context['class'] = 'playerPoints'
@@ -129,13 +132,13 @@ class AverageDraftPosition(FranchiseBase):
     def get_context_data(self, **kwargs):
         context = super(AverageDraftPosition, self).get_context_data(**kwargs)
         adp = self.players.exclude(
-            adp__isnull=True
+            player__adp__isnull=True
         ).filter(
-            Q(adp__lte=180) | Q(dynasty_adp__lte=180)
+            Q(player__adp__lte=180) | Q(player__dynasty_adp__lte=180)
         ).order_by(
-            'adp'
+            'player__adp'
         ).values_list(
-            'name', 'adp', 'dynasty_adp',
+            'player__name', 'player__adp', 'player__dynasty_adp',
         )
         context['title'] = 'ADP'
         context['class'] = 'adp'
@@ -178,11 +181,44 @@ class Waivers(FranchiseBase):
 
 
 class Player(DetailView):
-    model = models.Player
+    model = models.FranchisePlayer
     pk_url_kwarg = 'player_id'
+
+    def get_object(self, queryset=None):
+        return models.FranchisePlayer.objects.get(
+            player__player_id=self.kwargs.get('player_id'),
+            franchise__league__league_id=self.kwargs.get('league_id'),
+        )
 
     def get_context_data(self, **kwargs):
         context = super(Player, self).get_context_data(**kwargs)
         franchises = models.Franchise.objects.all()
         context['franchises'] = franchises
+        history = []
+        for draft in self.object.player.drafts.all():
+            history.append({
+                'type': 'Draft',
+                'date': draft.date,
+                'franchise': draft.franchise,
+                'amount': draft.bid_amount
+            })
+        for trade in self.object.player.trades.filter(trade__accepted=True):
+            history.append({
+                'type': 'Trade',
+                'date': trade.date,
+                'franchise': trade.other_franchise.franchise,
+                'amount': {
+                    'giving_up': trade.giving_up,
+                    'receiving': trade.receiving,
+                }
+            })
+        for waiver in self.object.player.waivers.all():
+            history.append({
+                'type': 'Add' if waiver.adding else 'Drop',
+                'date': waiver.date,
+                'franchise': waiver.franchise,
+                'amount': "FA" if waiver.free_agent else waiver.amount
+            })
+        history.sort(key=itemgetter('date'))
+        context['history'] = history
         return context

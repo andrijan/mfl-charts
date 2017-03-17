@@ -15,13 +15,13 @@
       <tbody>
 	{% for player in drafted_players %}
 	<tr>
-	  <td><a href="{% url 'player_detail' player.player.player_id %}">{{ player.player.readable_name }}</a></td>
+	  <td><a href="{% url 'player_detail' 76173 player.player.player_id %}">{{ player.player.name }}</a></td>
 	  <td>{{ player.bid_amount }}</td>
 	  <td>{{ player.date }}</td>
 	  <td>
-	    {% if player.player.franchise != object %}
-	    {% if player.player.franchise %}
-	    Currently on team: {{ player.player.franchise.name }}
+	    {% if player.player not in object.players.all() %}
+	    {% if player.player.franchise(76173) %}
+	    Currently on team: {{ player.player.franchise(76173).name }}
 	    {% else %}
 	    FA
 	    {% endif %}

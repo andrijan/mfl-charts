@@ -4,62 +4,63 @@ from . import views
 
 urlpatterns = [
     url(
-        r'^(?P<franchise_id>[\w-]+)/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/$',
         views.FranchiseBase.as_view(),
         name='franchise_details',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/points_per_week/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/points_per_week/$',
         views.PointsPerWeek.as_view(),
         name='franchise_points_per_week',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/position/(?P<position>[\w-]+)/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/'
+        'position/(?P<position>[\w-]+)/$',
         views.PositionBase.as_view(),
         name='franchise_positions',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/age/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/age/$',
         views.FranchiseAge.as_view(),
         name='franchise_age',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/college/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/college/$',
         views.FranchiseCollege.as_view(),
         name='franchise_college',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/weight_height/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/weight_height/$',
         views.FranchiseWeightHeight.as_view(),
         name='franchise_weight_height',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/draft_round/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/draft_round/$',
         views.FranchiseDraftRound.as_view(),
         name='franchise_draft_round',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/adp/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/adp/$',
         views.AverageDraftPosition.as_view(),
         name='franchise_adp',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/trades/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/trades/$',
         views.Trades.as_view(),
         name='franchise_trades',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/draft/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/draft/$',
         views.Draft.as_view(),
         name='franchise_draft',
     ),
     url(
-        r'^(?P<franchise_id>[\w-]+)/waivers/$',
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/waivers/$',
         views.Waivers.as_view(),
         name='franchise_waivers',
     ),
     url(
-        r'^players/(?P<player_id>[\w-]+)/$',
+        r'^(?P<league_id>[\w-]+)/players/(?P<player_id>[\w-]+)/$',
         views.Player.as_view(),
         name='player_detail',
     ),
