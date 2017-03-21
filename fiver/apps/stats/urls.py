@@ -4,9 +4,16 @@ from . import views
 
 urlpatterns = [
     url(
+        r'^(?P<league_id>[\w-]+)/'
+        '(?P<franchise_id>[\w-]+)/'
+        'redirect/(?P<url_name>[\w-]+)/$',
+        views.FranchiseRedirect.as_view(),
+        name='franchise_redirect',
+    ),
+    url(
         r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/$',
-        views.FranchiseBase.as_view(),
-        name='franchise_details',
+        views.TopPlayers.as_view(),
+        name='franchise_top_players',
     ),
     url(
         r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/points_per_week/$',

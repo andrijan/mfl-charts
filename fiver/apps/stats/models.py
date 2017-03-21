@@ -92,7 +92,8 @@ class Franchise(models.Model):
     def player(self, position, rank, ordering='-average_points'):
         try:
             return FranchisePlayerPoints.objects.filter(
-                franchise_player__player__position=position
+                franchise_player__player__position=position,
+                franchise_player__franchise=self,
             ).order_by(
                 ordering
             )[rank]
@@ -104,7 +105,7 @@ class Franchise(models.Model):
             position, rank, ordering
         ).franchise_player.player.player_id for f in Franchise.objects.all()]
         players = FranchisePlayerPoints.objects.filter(
-            franchise_player__player__player_id__in=ids
+            franchise_player__player__player_id__in=ids,
         ).order_by(ordering)
         field = ''.join(ordering.split('-'))
         kwargs = {field + '__gte': getattr(

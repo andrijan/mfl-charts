@@ -42,7 +42,7 @@
 	    <tr>
 	      <td>{{ event.date }}</td>
 	      <td>{{ event.type }}</td>
-	      <td>{{ event.franchise }}</td>
+	      <td><a href="{% url "franchise_details" 76173 event.franchise.franchise_id %}">{{ event.franchise }}</a></td>
 	      <td>
 		{% if event.type == "Trade" %}
 		<div class="row">
@@ -70,7 +70,9 @@
     </div>
   </div>
   <div class="col-4">
+    {% if player.twitter_username %}
     <a class="twitter-timeline" href="https://twitter.com/{{ player.twitter_username }}">Tweets by {{ player.twitter_username }}</a> <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+    {% endif %}
   </div>
 </div>
 {% endwith %}

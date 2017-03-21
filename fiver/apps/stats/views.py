@@ -4,8 +4,20 @@ from operator import itemgetter
 
 from django.db.models import Avg, Max, Min, Q
 from django.views.generic import DetailView
+from django.views.generic.base import RedirectView
 
 from . import models
+
+
+class FranchiseRedirect(RedirectView):
+    @property
+    def pattern_name(self):
+        return self.kwargs['url_name']
+
+    def get_redirect_url(self, *args, **kwargs):
+        kwargs.pop('url_name')
+        url = super(FranchiseRedirect, self).get_redirect_url(*args, **kwargs)
+        return url
 
 
 class FranchiseBase(DetailView):
@@ -16,9 +28,16 @@ class FranchiseBase(DetailView):
         context = super(FranchiseBase, self).get_context_data(**kwargs)
         franchises = models.Franchise.objects.all()
         context['franchises'] = franchises
-
         self.players = self.object.franchise_players.order_by('-total_points')
+        return context
+
+
+class TopPlayers(FranchiseBase):
+    def get_context_data(self, **kwargs):
+        context = super(TopPlayers, self).get_context_data(**kwargs)
+
         context['players'] = self.players
+        context['active'] = 'players'
         return context
 
 
@@ -74,7 +93,7 @@ class PositionBase(FranchiseBase):
         )
         context['distribution'] = json.dumps(list(partial_players))
         context['class'] = 'playerPoints'
-        context['active'] = self.kwargs['position'].lower()
+        context['active'] = 'positions'
         return context
 
 
