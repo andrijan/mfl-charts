@@ -16,7 +16,7 @@
       <tbody>
 	{% for trade in trades %}
 	<tr class="{% if trade.is_initiator %}table-success{% else %}table-info{% endif %}">
-	  <td><a href="{% url 'franchise_details' 76173 trade.other_franchise.franchise.franchise_id %}">{{ trade.other_franchise.franchise.name }}</a></td>
+	  <td><a href="{% url 'franchise_trades' 76173 trade.other_franchise.franchise.franchise_id %}">{{ trade.other_franchise.franchise.name }}</a></td>
 	  <td>{% for pop in trade.receiving %}{{ pop }}<br />{% endfor %}</td>
 	  <td>{% for pop in trade.giving_up %}{{ pop }}<br />{% endfor %}</td>
 	  <td>{{ trade.date }}</td>
