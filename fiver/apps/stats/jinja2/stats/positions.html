@@ -4,33 +4,29 @@
 <div class="row">
   <div class="col-7">
     {% for player in players %}
-    {% with franchise_player=player.franchise_player %}
-    {% with player=player.franchise_player.player %}
     <div class="row">
       <div class="col-4">
-	{% if player.espn_id %}
-	<img class="card-img-top" src="http://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{{ player.espn_id }}.png&w=175&h=127" />
+	{% if player.player.espn_id %}
+	<img class="card-img-top" src="http://a.espncdn.com/combiner/i?img=/i/headshots/nfl/players/full/{{ player.player.espn_id }}.png&w=175&h=127" />
 	{% else %}
-	<img class="card-img-top" src="http://placehold.it/175x127/fff.png?text={{ player.name }}" />
+	<img class="card-img-top" src="http://placehold.it/175x127/fff.png?text={{ player.player.name }}" />
 	{% endif %}
       </div>
       <div class="col-4">
-	<strong><a href="{% url 'player_detail' 76173 player.player_id %}">#{{ player.jersey }} {{ player.name }} ({{ player.age }})</a></strong><br />
-	<strong>Points</strong>: {{ franchise_player.total_points|round(1) }} ({{ franchise_player.average_points|round(1) }})<br />
-	<strong>ADP</strong>: {{ player.adp }} ({{ player.dynasty_adp }})<br />
-	<strong>Starts</strong>: {{ player.playerresult_set.filter(started=True, result__franchise=franchise_player.franchise).count() }} / {{ player.playerresult_set.filter(started=True, should_have_started=False, result__franchise=franchise_player.franchise).count() }} / {{ player.playerresult_set.filter(started=False, should_have_started=True, result__franchise=franchise_player.franchise).count() }}<br />
+	<strong><a href="{% url 'player_detail' 76173 player.player_id %}">#{{ player.player.jersey }} {{ player.player.name }} ({{ player.player.age }})</a></strong><br />
+	<strong>Points</strong>: {{ player.total_points|round(1) }} ({{ player.average_points|round(1) }})<br />
+	<strong>ADP</strong>: {{ player.player.adp }} ({{ player.player.dynasty_adp }})<br />
+	<strong>Starts</strong>: {{ player.player.started(object.id) }} / {{ player.player.started_but_should_not_have_started(object.id) }} / {{ player.player.should_have_started_but_did_not(object.id) }}<br />
       </div>
       <div class="col-4">
-	<strong>H/W</strong>: {{ player.height_cm|round(0) }}cm / {{ player.weight_kg|round(0) }}kg<br />
-	<strong>Draft</strong>: {{ player.draft_round_or_undrafter }} ({{ player.draft_year }})<br />
-	<strong>College</strong>: {{ player.college }}<br />
-	{% if player.twitter_username %}
-	<strong>Twitter</strong>: <a href="https://twitter.com/{{ player.twitter_username }}" target=_blank">@{{ player.twitter_username }}</a><br />
+	<strong>H/W</strong>: {{ player.player.height_cm|round(0) }}cm / {{ player.player.weight_kg|round(0) }}kg<br />
+	<strong>Draft</strong>: {{ player.player.draft_round_or_undrafted }} ({{ player.player.draft_year }})<br />
+	<strong>College</strong>: {{ player.player.college }}<br />
+	{% if player.player.twitter_username %}
+	<strong>Twitter</strong>: <a href="https://twitter.com/{{ player.player.twitter_username }}" target=_blank">@{{ player.player.twitter_username }}</a><br />
 	{% endif %}
       </div>
     </div>
-    {% endwith %}
-    {% endwith %}
     {% endfor %}
   </div>
   <div class="col-5">

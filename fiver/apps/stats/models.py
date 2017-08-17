@@ -53,6 +53,29 @@ class Player(models.Model):
         except FranchisePlayer.DoesNotExist:
             return None
 
+    def started(self, franchise_id):
+        return PlayerResult.objects.filter(
+            player=self,
+            result__franchise_id=franchise_id,
+            started=True,
+        ).count()
+
+    def started_but_should_not_have_started(self, franchise_id):
+        return PlayerResult.objects.filter(
+            player=self,
+            result__franchise_id=franchise_id,
+            started=True,
+            should_have_started=False,
+        ).count()
+
+    def should_have_started_but_did_not(self, franchise_id):
+        return PlayerResult.objects.filter(
+            player=self,
+            result__franchise_id=franchise_id,
+            started=False,
+            should_have_started=True,
+        ).count()
+
     @property
     def height_cm(self):
         return self.height * 2.54
@@ -62,7 +85,7 @@ class Player(models.Model):
         return self.weight * 0.453592
 
     @property
-    def draft_round_or_undrafter(self):
+    def draft_round_or_undrafted(self):
         return self.draft_round or "Undrafted"
 
     @property
@@ -90,27 +113,41 @@ class Franchise(models.Model):
         return self.name
 
     def player(self, position, rank, ordering='-average_points'):
-        try:
-            return FranchisePlayerPoints.objects.filter(
-                franchise_player__player__position=position,
-                franchise_player__franchise=self,
-            ).order_by(
-                ordering
-            )[rank]
-        except IndexError:
-            return None
+        return PlayerResult.objects.filter(
+            player__position=position,
+            player__franchise_player__franchise=self,
+            available=True,
+        ).values(
+            'player_id',
+            'player__name'
+        ).annotate(
+            total_points=models.Sum('points'),
+            average_points=models.Avg('points'),
+            games=models.Count('points'),
+        ).order_by(
+            ordering
+        )[rank]
 
     def place(self, position, rank, ordering='-average_points'):
         ids = [f.player(
             position, rank, ordering
-        ).franchise_player.player.player_id for f in Franchise.objects.all()]
-        players = FranchisePlayerPoints.objects.filter(
-            franchise_player__player__player_id__in=ids,
-        ).order_by(ordering)
+        )['player_id'] for f in Franchise.objects.filter(league=self.league)]
+        players = PlayerResult.objects.filter(
+            player__player_id__in=ids,
+            available=True,
+        ).values(
+            'player__name'
+        ).annotate(
+            total_points=models.Sum('points'),
+            average_points=models.Avg('points'),
+            games=models.Count('points'),
+        ).order_by(
+            ordering
+        )
         field = ''.join(ordering.split('-'))
-        kwargs = {field + '__gte': getattr(
-            self.player(position, rank, ordering), field
-        )}
+        kwargs = {
+            field + '__gte': self.player(position, rank, ordering)[field]
+        }
         index = players.filter(**kwargs).count()
         return index
 
@@ -179,7 +216,7 @@ class Franchise(models.Model):
 
 class FranchisePlayer(models.Model):
     franchise = models.ForeignKey(Franchise, related_name="franchise_players")
-    player = models.ForeignKey(Player)
+    player = models.ForeignKey(Player, related_name="franchise_player")
 
     @property
     def name(self):
@@ -252,7 +289,7 @@ class TradeOffer(models.Model):
     franchise = models.ForeignKey(Franchise, related_name="tradeoffers")
     trade = models.ForeignKey(Trade)
     players = models.ManyToManyField(Player, related_name="trades")
-    picks = models.ManyToManyField(Pick)
+    picks = models.TextField(blank=True, null=True)
     is_initiator = models.BooleanField()
 
     @property
@@ -267,8 +304,8 @@ class TradeOffer(models.Model):
         players_and_picks = []
         for player in self.players.all():
             players_and_picks.append(player.name)
-        for pick in self.picks.all():
-            players_and_picks.append(pick.__str__())
+        for pick in self.picks.split(','):
+            players_and_picks.append(pick)
         return players_and_picks
 
     @property
@@ -276,8 +313,8 @@ class TradeOffer(models.Model):
         players_and_picks = []
         for player in self.other_franchise.players.all():
             players_and_picks.append(player.name)
-        for pick in self.other_franchise.picks.all():
-            players_and_picks.append(pick.__str__())
+        for pick in self.other_franchise.picks.split(','):
+            players_and_picks.append(pick)
         return players_and_picks
 
     @property
@@ -301,6 +338,7 @@ class Result(models.Model):
 class PlayerResult(models.Model):
     result = models.ForeignKey(Result)
     player = models.ForeignKey(Player)
+    available = models.BooleanField(default=False)
     started = models.BooleanField()
     should_have_started = models.BooleanField()
     points = models.FloatField(default=0.0)

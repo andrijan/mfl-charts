@@ -55,7 +55,7 @@ def populate_adp():
             except IndexError:
                 continue
             try:
-                p = models.Player.objects.get(name=name)
+                p = models.Player.objects.get(name__iexact=name)
             except models.Player.DoesNotExist:
                 # Is it Beckham?
                 if name == "Odell Beckham Jr.":
@@ -64,6 +64,7 @@ def populate_adp():
                     continue
             except models.Player.MultipleObjectsReturned:
                 # What to do, what do do
+                print(name)
                 continue
 
             setattr(p, adp_type, tds[6].text)
@@ -79,14 +80,6 @@ def populate_franchises(league_id, year):
     league = models.League.objects.get(league_id=league_id)
     divisions = league_info['divisions']['division']
     inst = Api(year)
-    average_scores = inst.player_scores(
-        league_id,
-        week='AVG',
-    )['playerScores']['playerScore']
-    total_scores = inst.player_scores(
-        league_id,
-        week='YTD',
-    )['playerScores']['playerScore']
     for division in divisions:
         models.Division.objects.get_or_create(
             division_id=division['id'],
@@ -109,26 +102,6 @@ def populate_franchises(league_id, year):
             p = next(
                 (item for item in all_players if item['id'] == player['id'])
             )
-            try:
-                average = next((
-                    item for item in average_scores if (
-                        item['id'] == player['id']
-                    )
-                ))
-            except StopIteration:
-                average = {'score': 0}
-            except TypeError:
-                continue
-            try:
-                total = next((
-                    item for item in total_scores if (
-                        item['id'] == player['id']
-                    )
-                ))
-            except StopIteration:
-                total = {'score': 0}
-            except TypeError:
-                continue
             p['player_id'] = p['id']
             name = p['name'].split(',')
             p['name'] = name[1].strip() + " " + name[0]
@@ -138,21 +111,18 @@ def populate_franchises(league_id, year):
                 franchise=f,
                 player=player,
             )
-            models.FranchisePlayerPoints.objects.get_or_create(
-                franchise_player=franchise_player,
-                year=year,
-                average_points=float(average['score']),
-                total_points=float(total['score']),
-            )
 
 
 def populate_results(league_id, year):
     instance = Api(year)
-    weekly_results = instance.weekly_results(
-        league_id, "YTD"
-    )['allWeeklyResults']['weeklyResults']
+    for week in range(17):
+        try:
+            week = instance.weekly_results(
+                league_id, week + 1
+            )['weeklyResults']
+        except KeyError:
+            return
 
-    for week in weekly_results:
         try:
             matchups = week['matchup']
         except KeyError:
@@ -175,7 +145,9 @@ def populate_results(league_id, year):
                 )
                 for player in franchise['player']:
                     try:
-                        p = models.Player.objects.get(player_id=player['id'])
+                        p = models.Player.objects.get(
+                            player_id=player['id']
+                        )
                     except models.Player.DoesNotExist:
                         continue
                     models.PlayerResult.objects.get_or_create(
@@ -183,11 +155,14 @@ def populate_results(league_id, year):
                         player=p,
                         started=player['status'] == 'starter',
                         should_have_started=player['shouldStart'] == '1',
+                        available=player['score'] != "",
                         points=player['score'] or 0.0,
                     )
 
         for matchup in matchups:
             for franchise in matchup['franchise']:
+                if 'result' not in franchise:
+                    continue
                 f = models.Franchise.objects.get(
                     franchise_id=franchise['id'],
                     league__league_id=league_id,
@@ -212,12 +187,15 @@ def populate_results(league_id, year):
                 )
                 for player in franchise['player']:
                     try:
-                        p = models.Player.objects.get(player_id=player['id'])
+                        p = models.Player.objects.get(
+                            player_id=player['id']
+                        )
                     except models.Player.DoesNotExist:
                         continue
                     models.PlayerResult.objects.get_or_create(
                         result=result,
                         player=p,
+                        available=player['score'] != "",
                         started=player['status'] == 'starter',
                         should_have_started=player['shouldStart'] == '1',
                         points=player['score'] or 0.0,
@@ -279,25 +257,36 @@ def populate_trades(league_id, year):
             )
 
         franchise1_gave_up = trade['franchise1_gave_up'].split(',')[:-1]
+        picks = []
         for pick_or_player in franchise1_gave_up:
-            if pick_or_player.startswith('FP'):
+            if pick_or_player.startswith('DP'):
+                (
+                    draft_round,
+                    draft_pick,
+                ) = pick_or_player.split('_')[1:]
+                picks.append("{} {}.{} ({})".format(
+                    year,
+                    str(int(draft_round) + 1),
+                    str(int(draft_pick) + 1),
+                    models.Franchise(franchise_id=trade['franchise']).name,
+                ))
+            elif pick_or_player.startswith('FP'):
                 (
                     franchise_id,
                     draft_year,
                     draft_round,
                 ) = pick_or_player.split('_')[1:]
-                pick = models.Pick.objects.get(
-                    draft_year=draft_year,
-                    draft_round=draft_round,
-                    franchise__franchise_id=franchise_id,
-                    franchise__league__league_id=league_id,
-                )
-                offer1.picks.add(pick)
+                picks.append("{} {} ({})".format(
+                    draft_year,
+                    draft_round,
+                    models.Franchise(franchise_id=trade['franchise']).name,
+                ))
             else:
                 player = models.Player.objects.get(
                     player_id=pick_or_player
                 )
                 offer1.players.add(player)
+        offer1.picks = ", ".join(picks)
         offer1.save()
         franchise_2 = models.Franchise.objects.get(
             franchise_id=trade['franchise2'],
@@ -309,25 +298,37 @@ def populate_trades(league_id, year):
             is_initiator=False,
         )
         franchise2_gave_up = trade['franchise2_gave_up'].split(',')[:-1]
+        picks = []
         for pick_or_player in franchise2_gave_up:
-            if pick_or_player.startswith('FP'):
+            if pick_or_player.startswith('DP'):
+                (
+                    draft_round,
+                    draft_pick,
+                ) = pick_or_player.split('_')[1:]
+                picks.append("{} {}.{} ({})".format(
+                    year,
+                    str(int(draft_round) + 1),
+                    str(int(draft_pick) + 1),
+                    models.Franchise(franchise_id=trade['franchise2']).name,
+                ))
+            elif pick_or_player.startswith('FP'):
                 (
                     franchise_id,
                     draft_year,
                     draft_round,
                 ) = pick_or_player.split('_')[1:]
-                pick = models.Pick.objects.get(
-                    draft_year=draft_year,
-                    draft_round=draft_round,
-                    franchise__franchise_id=franchise_id,
-                    franchise__league__league_id=league_id,
-                )
-                offer2.picks.add(pick)
+                picks.append("{} {} ({})".format(
+                    draft_year,
+                    draft_round,
+                    models.Franchise(franchise_id=trade['franchise2']).name,
+                ))
             else:
                 player = models.Player.objects.get(
                     player_id=pick_or_player
                 )
                 offer2.players.add(player)
+        offer2.picks = ", ".join(picks)
+        offer2.save()
 
 
 def populate_auction_draft(league_id, year):
@@ -354,9 +355,12 @@ def populate_auction_draft(league_id, year):
 
 def populate_waivers(league_id, year):
     instance = Api(year)
-    blind_waivers = instance.transactions(
-        league_id, transaction_type="bbid_waiver"
-    )['transactions']['transaction']
+    try:
+        blind_waivers = instance.transactions(
+            league_id, transaction_type="bbid_waiver"
+        )['transactions']['transaction']
+    except KeyError:
+        return
     for waiver in blind_waivers:
         bought_id, amount, sold_id = waiver['transaction'].split('|')
         franchise = models.Franchise.objects.get(

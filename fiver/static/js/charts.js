@@ -185,7 +185,7 @@ $(".playerPoints").each(function() {
 	    position: 'right',
 	    display: false,
 	    ticks: {
-	      max: 25,
+	      max: 30,
 	      min: 0,
 	      stepSize: 5,
 	    }
@@ -194,7 +194,7 @@ $(".playerPoints").each(function() {
 	    id: 'total',
 	    position: 'left',
 	    ticks: {
-	      max: 400,
+	      max: 450,
 	      min: 0,
 	      stepSize: 50,
 	    }

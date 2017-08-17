@@ -2,7 +2,7 @@ import json
 
 from operator import itemgetter
 
-from django.db.models import Avg, Max, Min, Q
+from django.db.models import Avg, Count, Max, Min, Q, Sum
 from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
 
@@ -82,16 +82,46 @@ class PositionBase(FranchiseBase):
 
     def get_context_data(self, **kwargs):
         context = super(PositionBase, self).get_context_data(**kwargs)
-        players = models.FranchisePlayerPoints.objects.filter(
-            franchise_player__franchise=self.object,
-            franchise_player__player__position=self.kwargs['position']
-        ).order_by('-total_points')
-        context['players'] = players
-
-        partial_players = players.values_list(
-            'franchise_player__player__name', 'average_points', 'total_points',
+        players = models.PlayerResult.objects.filter(
+            player__position=self.kwargs['position'],
+            player__franchise_player__franchise=self.object,
+            available=True,
+        ).values(
+            'player_id',
+            'started',
+        ).annotate(
+            Count('started'),
+        ).values(
+            'player_id',
+            'player__name',
+        ).annotate(
+            total_points=Sum('points'),
+            average_points=Avg('points'),
+            games=Count('points'),
+        ).order_by(
+            '-total_points'
         )
-        context['distribution'] = json.dumps(list(partial_players))
+        players_list = []
+        for player in players:
+            players_dict = {}
+            for key, value in player.items():
+                players_dict[key] = value
+            players_dict['player'] = models.Player.objects.get(
+                player_id=player['player_id']
+            )
+            players_list.append(players_dict)
+
+        context['players'] = players_list
+
+        distribution = []
+        for player in players:
+            distribution.append([
+                player['player__name'],
+                player['average_points'],
+                player['total_points'],
+            ])
+
+        context['distribution'] = json.dumps(distribution)
         context['class'] = 'playerPoints'
         context['active'] = 'positions'
         return context

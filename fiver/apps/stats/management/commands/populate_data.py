@@ -20,10 +20,9 @@ class Command(BaseCommand):
             populate.populate_league(league_id, year + i, year)
             print("Populate all players, year: {}".format(year + i))
             populate.populate_all_players(year + i)
-
-        for i in range(current_year - year):
-            print("Populate franchises, year: {}".format(year + i))
-            populate.populate_franchises(league_id, year + i)
+        print("Populate franchises, year: {}".format(current_year))
+        populate.populate_franchises(league_id, current_year)
+        for i in range((current_year - year) + 1):
             print("Populate results, year: {}".format(year + i))
             populate.populate_results(league_id, year + i)
             print("Populate picks, year: {}".format(year + i))
