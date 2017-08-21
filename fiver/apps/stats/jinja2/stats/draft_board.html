@@ -54,7 +54,7 @@ _gaq.push(['_trackPageview']);
 	<tr>
 	  {% endif %}
 	  <td id="pick1001" class="pick selectColumn playerPicked pickOwner" style="font-size: 16px; line-height: 34px; min-width: 100px; max-width: 100px; background-color: {{ player.franchise(76173).color }}; padding: 2px 3px;">
-	    <div class="playerPos">{{ player.franchise(76173).initials }}</div>
+	    <div class="playerPos">{% if player.franchise(76173) %}{{ player.franchise(76173).initials }}{% endif %}</div>
 	    <div class="playerTeam">{{ player.team }}</div>
 	    <div class="playerBye"></div>
 	    <div class="playerFName" style="font-size: 16px; line-height: 36px; clear: both;">{{ player.name.split(' ')[0] }}</div>

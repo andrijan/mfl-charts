@@ -14,6 +14,10 @@ class DraftBoard(ListView):
     model = models.Player
     template_name = 'stats/draft_board.html'
 
+    def get_queryset(self):
+        qs = super(DraftBoard, self).get_queryset()
+        return qs.filter(rank__lte=300)
+
 
 class FranchiseRedirect(RedirectView):
     @property
