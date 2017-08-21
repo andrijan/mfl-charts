@@ -5,8 +5,14 @@ from operator import itemgetter
 from django.db.models import Avg, Count, Max, Min, Q, Sum
 from django.views.generic import DetailView
 from django.views.generic.base import RedirectView
+from django.views.generic.list import ListView
 
 from . import models
+
+
+class DraftBoard(ListView):
+    model = models.Player
+    template_name = 'stats/draft_board.html'
 
 
 class FranchiseRedirect(RedirectView):
@@ -185,9 +191,9 @@ class AverageDraftPosition(FranchiseBase):
         ).filter(
             Q(player__adp__lte=180) | Q(player__dynasty_adp__lte=180)
         ).order_by(
-            'player__adp'
+            'player__rank'
         ).values_list(
-            'player__name', 'player__adp', 'player__dynasty_adp',
+            'player__name', 'player__rank', 'player__dynasty_rank',
         )
         context['title'] = 'ADP'
         context['class'] = 'adp'

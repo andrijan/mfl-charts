@@ -45,13 +45,17 @@ def populate_adp():
     dynasty = base_url + 'dynasty-overall.php'
     urls = {'adp': ppr, 'dynasty_adp': dynasty}
     for adp_type, url in urls.items():
+        rank_type = 'rank' if adp_type == 'adp' else 'dynasty_rank'
         page = urlopen(url).read()
         soup = BeautifulSoup(page, 'html5lib')
         table = soup.find('table', {'id': 'data'})
         for tr in table.find_all('tr'):
             tds = tr.find_all('td')
             try:
-                name = " ".join(tds[1].text.strip().split(" ")[:-1])
+                if tds[2].text.startswith("DST"):
+                    name = tds[1].text.strip()
+                else:
+                    name = " ".join(tds[1].text.strip().split(" ")[:-1])
             except IndexError:
                 continue
             try:
@@ -60,14 +64,26 @@ def populate_adp():
                 # Is it Beckham?
                 if name == "Odell Beckham Jr.":
                     p = models.Player.objects.get(name="Odell Beckham")
+                elif name == "Robert Kelley":
+                    p = models.Player.objects.get(name="Rob Kelley")
+                elif name == "Ted Ginn":
+                    p = models.Player.objects.get(name="Ted Ginn Jr.")
+                elif name == "Benjamin Watson":
+                    p = models.Player.objects.get(name="Ben Watson")
+                elif name == "Will Lutz":
+                    p = models.Player.objects.get(name="Wil Lutz")
                 else:
                     continue
             except models.Player.MultipleObjectsReturned:
-                # What to do, what do do
-                print(name)
-                continue
+                # What to do, what do do use the highest ID?
+                p = models.Player.objects.filter(
+                    name__iexact=name
+                ).order_by(
+                    'player_id'
+                ).last()
 
             setattr(p, adp_type, tds[6].text)
+            setattr(p, rank_type, tds[0].text)
             p.save()
 
 
@@ -238,13 +254,13 @@ def populate_trades(league_id, year):
             league__league_id=league_id,
         )
         try:
-            models.TradeOffer.objects.get(
+            offer1 = models.TradeOffer.objects.get(
                 franchise=franchise_1,
                 trade__timestamp=trade['timestamp'],
                 trade__accepted=True,
                 is_initiator=True,
             )
-            continue
+            t = offer1.trade
         except models.TradeOffer.DoesNotExist:
             t = models.Trade.objects.create(
                 timestamp=trade['timestamp'],
@@ -264,11 +280,10 @@ def populate_trades(league_id, year):
                     draft_round,
                     draft_pick,
                 ) = pick_or_player.split('_')[1:]
-                picks.append("{} {}.{} ({})".format(
+                picks.append("{} {}.{}".format(
                     year,
                     str(int(draft_round) + 1),
                     str(int(draft_pick) + 1),
-                    models.Franchise(franchise_id=trade['franchise']).name,
                 ))
             elif pick_or_player.startswith('FP'):
                 (
@@ -276,10 +291,13 @@ def populate_trades(league_id, year):
                     draft_year,
                     draft_round,
                 ) = pick_or_player.split('_')[1:]
+                franchise = models.Franchise.objects.get(
+                    franchise_id=franchise_id
+                )
                 picks.append("{} {} ({})".format(
                     draft_year,
                     draft_round,
-                    models.Franchise(franchise_id=trade['franchise']).name,
+                    franchise.name,
                 ))
             else:
                 player = models.Player.objects.get(
@@ -292,7 +310,7 @@ def populate_trades(league_id, year):
             franchise_id=trade['franchise2'],
             league__league_id=league_id,
         )
-        offer2 = models.TradeOffer.objects.create(
+        offer2, _ = models.TradeOffer.objects.get_or_create(
             franchise=franchise_2,
             trade=t,
             is_initiator=False,
@@ -305,11 +323,10 @@ def populate_trades(league_id, year):
                     draft_round,
                     draft_pick,
                 ) = pick_or_player.split('_')[1:]
-                picks.append("{} {}.{} ({})".format(
+                picks.append("{} {}.{}".format(
                     year,
                     str(int(draft_round) + 1),
                     str(int(draft_pick) + 1),
-                    models.Franchise(franchise_id=trade['franchise2']).name,
                 ))
             elif pick_or_player.startswith('FP'):
                 (
@@ -317,10 +334,13 @@ def populate_trades(league_id, year):
                     draft_year,
                     draft_round,
                 ) = pick_or_player.split('_')[1:]
+                franchise = models.Franchise.objects.get(
+                    franchise_id=franchise_id
+                )
                 picks.append("{} {} ({})".format(
                     draft_year,
                     draft_round,
-                    models.Franchise(franchise_id=trade['franchise2']).name,
+                    franchise.name,
                 ))
             else:
                 player = models.Player.objects.get(

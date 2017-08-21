@@ -11,6 +11,11 @@ urlpatterns = [
         name='franchise_redirect',
     ),
     url(
+        r'^(?P<league_id>[\w-]+)/draft_board/$',
+        views.DraftBoard.as_view(),
+        name='draft_board',
+    ),
+    url(
         r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/$',
         views.TopPlayers.as_view(),
         name='franchise_top_players',

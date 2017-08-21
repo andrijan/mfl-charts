@@ -4,6 +4,7 @@ from collections import Counter
 from datetime import date, datetime
 
 from django.db import models
+from django.utils.functional import cached_property
 
 
 class League(models.Model):
@@ -37,8 +38,13 @@ class Player(models.Model):
     position = models.CharField(max_length=255, blank=True, null=True)
     team = models.CharField(max_length=255, blank=True, null=True)
     twitter_username = models.CharField(max_length=255, blank=True, null=True)
+    rank = models.IntegerField(blank=True, null=True)
+    dynasty_rank = models.IntegerField(blank=True, null=True)
     adp = models.FloatField(blank=True, null=True)
     dynasty_adp = models.FloatField(blank=True, null=True)
+
+    class Meta:
+        ordering = ('rank', )
 
     def __str__(self):
         return self.name
@@ -102,6 +108,22 @@ class Player(models.Model):
         return None
 
 
+COLORS = {
+    '0001': '100,149,237',
+    '0002': '102,205,170',
+    '0003': '255,215,0',
+    '0004': '205,92,92',
+    '0005': '233,150,122',
+    '0006': '255,105,180',
+    '0007': '186,85,211',
+    '0008': '240,255,240',
+    '0009': '0,206,209',
+    '0010': '189,183,107',
+    '0011': '245,222,179',
+    '0012': '216,191,216',
+}
+
+
 class Franchise(models.Model):
     franchise_id = models.CharField(max_length=4)
     name = models.CharField(max_length=255)
@@ -111,6 +133,16 @@ class Franchise(models.Model):
 
     def __str__(self):
         return self.name
+
+    @cached_property
+    def color(self):
+        return 'rgb({})'.format(
+            COLORS.get(self.franchise_id)
+        )
+
+    @cached_property
+    def initials(self):
+        return ''.join(n[0].upper() for n in self.name.split())
 
     def player(self, position, rank, ordering='-average_points'):
         return PlayerResult.objects.filter(
