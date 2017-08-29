@@ -38,7 +38,9 @@ class FranchiseBase(DetailView):
         context = super(FranchiseBase, self).get_context_data(**kwargs)
         franchises = models.Franchise.objects.all()
         context['franchises'] = franchises
-        self.players = self.object.franchise_players.order_by('-total_points')
+        self.players = self.object.franchise_players.order_by(
+            '-points__total_points'
+        )
         return context
 
 
@@ -48,6 +50,16 @@ class TopPlayers(FranchiseBase):
 
         context['players'] = self.players
         context['active'] = 'players'
+        return context
+
+
+class TaxiEligibility(TopPlayers):
+    template_name = 'stats/taxi_eligibility.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(TaxiEligibility, self).get_context_data(**kwargs)
+
+        context['active'] = 'positions'
         return context
 
 

@@ -4,3 +4,4 @@ __pycache__
 *.swo
 db.sqlite3
 venv
+*.pyc

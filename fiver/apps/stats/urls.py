@@ -21,6 +21,11 @@ urlpatterns = [
         name='franchise_top_players',
     ),
     url(
+        r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/taxi_eligibility/$',
+        views.TaxiEligibility.as_view(),
+        name='franchise_taxi_eligibility',
+    ),
+    url(
         r'^(?P<league_id>[\w-]+)/(?P<franchise_id>[\w-]+)/points_per_week/$',
         views.PointsPerWeek.as_view(),
         name='franchise_points_per_week',

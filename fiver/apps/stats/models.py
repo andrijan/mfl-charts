@@ -59,6 +59,21 @@ class Player(models.Model):
         except FranchisePlayer.DoesNotExist:
             return None
 
+    @property
+    def image_url(self):
+        if self.espn_id:
+            return (
+                "http://a.espncdn.com/combiner/i?img=/i/headshots/" +
+                "nfl/players/full/{}.png&w=100&h=73".format(self.espn_id)
+            )
+        return "http://placehold.it/100x73/fff.png?text={}".format(self.name)
+
+    @property
+    def eligible_for_taxi(self):
+        return not PlayerResult.objects.filter(
+            player=self, started=True
+        ).exists()
+
     def started(self, franchise_id):
         return PlayerResult.objects.filter(
             player=self,

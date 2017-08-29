@@ -51,6 +51,7 @@
 	      <a class="dropdown-item" href="{% url 'franchise_positions' 76173 object.franchise_id 'WR' %}">Wide Receivers</a>
 	      <a class="dropdown-item" href="{% url 'franchise_positions' 76173 object.franchise_id 'QB' %}">Quarterbacks</a>
 	      <a class="dropdown-item" href="{% url 'franchise_positions' 76173 object.franchise_id 'TE' %}">Tight Ends</a>
+	      <a class="dropdown-item" href="{% url 'franchise_taxi_eligibility' 76173 object.franchise_id %}">Taxi Eligibility</a>
 	    </li>
 	    <li class="nav-item">
 	      <a class="nav-link {% if active == "age" %}active{% endif %}" href="{% url 'franchise_age' 76173 object.franchise_id %}">Age Range</a>

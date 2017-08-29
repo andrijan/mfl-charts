@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>{{ object.name }} - Eligible for Taxi Squad</h1>
+<div class="row">
+  <div class="col-7">
+    <table class="table table-sm">
+      <thead>
+	<tr>
+	  <th>Player</th>
+	</tr>
+      </thead>
+      <tbody>
+	{% for player in players %}
+	{% if player.player.eligible_for_taxi %}
+	<tr>
+	  <td><img src="{{ player.player.image_url }}" />{{ player.player.name }}</td>
+	</tr>
+	{% endif %}
+	{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
