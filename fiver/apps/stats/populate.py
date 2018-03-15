@@ -246,7 +246,7 @@ def populate_trades(league_id, year):
     instance = Api(year)
     trades = instance.transactions(
         league_id, transaction_type="trade"
-    )['transactions']['transaction']
+    )['transactions'].get('transaction', [])
 
     for trade in trades:
         franchise_1 = models.Franchise.objects.get(
