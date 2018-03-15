@@ -275,6 +275,8 @@ def populate_trades(league_id, year):
         franchise1_gave_up = trade['franchise1_gave_up'].split(',')[:-1]
         picks = []
         for pick_or_player in franchise1_gave_up:
+            if pick_or_player == '':
+                continue
             if pick_or_player.startswith('DP'):
                 (
                     draft_round,
@@ -318,6 +320,8 @@ def populate_trades(league_id, year):
         franchise2_gave_up = trade['franchise2_gave_up'].split(',')[:-1]
         picks = []
         for pick_or_player in franchise2_gave_up:
+            if pick_or_player == '':
+                continue
             if pick_or_player.startswith('DP'):
                 (
                     draft_round,
