@@ -110,9 +110,9 @@ def populate_franchises(league_id, year):
         )
         f, _ = models.Franchise.objects.get_or_create(
             franchise_id=r['id'],
-            name=r['name'],
             division=division,
             league=league,
+            defaults={'name': r['name']}
         )
         for player in roster['player']:
             p = next(
