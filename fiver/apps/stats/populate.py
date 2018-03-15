@@ -387,28 +387,32 @@ def populate_waivers(league_id, year):
         return
     for waiver in blind_waivers:
         bought_id, amount, sold_id = waiver['transaction'].split('|')
+        bought_id = bought_id.split(',')[0]
+        sold_id = sold_id.split(',')[0]
         franchise = models.Franchise.objects.get(
             franchise_id=waiver['franchise'],
             league__league_id=league_id,
         )
-        models.Waiver.objects.get_or_create(
-            franchise=franchise,
-            timestamp=waiver['timestamp'],
-            player_id=bought_id,
-            amount=int(float(amount)),
-            adding=True,
-            free_agent=False,
-        )
-        models.Waiver.objects.get_or_create(
-            franchise=franchise,
-            timestamp=waiver['timestamp'],
-            player_id=sold_id,
-            adding=False,
-            free_agent=False,
-        )
+        if bought_id:
+            models.Waiver.objects.get_or_create(
+                franchise=franchise,
+                timestamp=waiver['timestamp'],
+                player_id=bought_id.split(',')[0],
+                amount=int(float(amount)),
+                adding=True,
+                free_agent=False,
+            )
+        if sold_id:
+            models.Waiver.objects.get_or_create(
+                franchise=franchise,
+                timestamp=waiver['timestamp'],
+                player_id=sold_id.split(',')[0],
+                adding=False,
+                free_agent=False,
+            )
     free_agents = instance.transactions(
         league_id, transaction_type="waiver"
-    )['transactions']['transaction']
+    )['transactions'].get('transaction', [])
     for free_agent in free_agents:
         franchise = models.Franchise.objects.get(
             franchise_id=free_agent['franchise'],
