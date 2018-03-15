@@ -49,42 +49,43 @@ def populate_adp():
         page = urlopen(url).read()
         soup = BeautifulSoup(page, 'html5lib')
         table = soup.find('table', {'id': 'data'})
-        for tr in table.find_all('tr'):
-            tds = tr.find_all('td')
-            try:
-                if tds[2].text.startswith("DST"):
-                    name = tds[1].text.strip()
-                else:
-                    name = " ".join(tds[1].text.strip().split(" ")[:-1])
-            except IndexError:
-                continue
-            try:
-                p = models.Player.objects.get(name__iexact=name)
-            except models.Player.DoesNotExist:
-                # Is it Beckham?
-                if name == "Odell Beckham Jr.":
-                    p = models.Player.objects.get(name="Odell Beckham")
-                elif name == "Robert Kelley":
-                    p = models.Player.objects.get(name="Rob Kelley")
-                elif name == "Ted Ginn":
-                    p = models.Player.objects.get(name="Ted Ginn Jr.")
-                elif name == "Benjamin Watson":
-                    p = models.Player.objects.get(name="Ben Watson")
-                elif name == "Will Lutz":
-                    p = models.Player.objects.get(name="Wil Lutz")
-                else:
+        if table:
+            for tr in table.find_all('tr'):
+                tds = tr.find_all('td')
+                try:
+                    if tds[2].text.startswith("DST"):
+                        name = tds[1].text.strip()
+                    else:
+                        name = " ".join(tds[1].text.strip().split(" ")[:-1])
+                except IndexError:
                     continue
-            except models.Player.MultipleObjectsReturned:
-                # What to do, what do do use the highest ID?
-                p = models.Player.objects.filter(
-                    name__iexact=name
-                ).order_by(
-                    'player_id'
-                ).last()
+                try:
+                    p = models.Player.objects.get(name__iexact=name)
+                except models.Player.DoesNotExist:
+                    # Is it Beckham?
+                    if name == "Odell Beckham Jr.":
+                        p = models.Player.objects.get(name="Odell Beckham")
+                    elif name == "Robert Kelley":
+                        p = models.Player.objects.get(name="Rob Kelley")
+                    elif name == "Ted Ginn":
+                        p = models.Player.objects.get(name="Ted Ginn Jr.")
+                    elif name == "Benjamin Watson":
+                        p = models.Player.objects.get(name="Ben Watson")
+                    elif name == "Will Lutz":
+                        p = models.Player.objects.get(name="Wil Lutz")
+                    else:
+                        continue
+                except models.Player.MultipleObjectsReturned:
+                    # What to do, what do do use the highest ID?
+                    p = models.Player.objects.filter(
+                        name__iexact=name
+                    ).order_by(
+                        'player_id'
+                    ).last()
 
-            setattr(p, adp_type, tds[6].text)
-            setattr(p, rank_type, tds[0].text)
-            p.save()
+                setattr(p, adp_type, tds[6].text)
+                setattr(p, rank_type, tds[0].text)
+                p.save()
 
 
 def populate_franchises(league_id, year):
